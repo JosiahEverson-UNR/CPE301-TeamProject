@@ -1,5 +1,4 @@
 
-//***** NEEDS CODE
 
 // Libraries
 #include <Arduino.h>
@@ -54,7 +53,7 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (l
 // Temperature threshold
 #define t_threshold 25
 
-//Initialize LCD
+// Initialize LCD
 // RS: Pin 8, PH5
 // Enabler: 7, PH4
 // D4: 6, PH3
@@ -95,6 +94,8 @@ void setup()
 
 /*
 BUCKET:
+    //***** NEEDS CODE
+
 
     // CLears Display
     lcd.clear();
@@ -119,16 +120,14 @@ void loop()
 {
   // Water Sensor: PK0
 
-  // water level = adc_reading
+  // water level = adc_reading, channel 0
   unsigned int water_level = adc_read(0);
   // prints adc
   // print_int(adc_reading);
   Serial.println(water_level);
 
   // Thermometer/ Temperature Sensor
-
-  //RS can be anything, selects register we'll be using (H port)
-  //enabler PWM
+  //*****
 
 
   // LEDs Location:
@@ -138,33 +137,33 @@ void loop()
   // PB4 - BLUE (RUNNING) LED
   // PH6 - Push Button
 
-  // if the system is disabled or OFF ******
+  // If the system is disabled or OFF ******
   if()
   {
-    //checks whether the button is pushed; checks bit 6 (0100 0000)
+    // Checks whether the button is pushed; checks bit 6 (0100 0000)
     if (!(*myPIN_H & 0x40))
     {
-      //a loop that does nothing to make sure noise is not included (which occurs at a micro second)
+      // A loop that does nothing to make sure noise is not included (which occurs at a micro second)
       for (volatile unsigned int i = 0; i < 1000; i++);
 
-      //checks again if the button is pressed
+      // Checks again if the button is pressed
       if (!(*myPIN_H & 0x40))
       {
-        //IDLE State
+        // IDLE State
 
-        //time stamps
-        //monitor water level
+        // Time stamps
+        // Monitor water level
 
-        //if statement if the water level is under the threshold (low)
+        // If statement if the water level is under the threshold (low)
 
 /*      if(water_level < w_threshold)
         {
-          //ERROR state
+          // ERROR state
 
-          //error message
+          // Error message
           //Serial.println("Water level is too LOW");
 
-          //RED LED ON (0010 0000)
+          // RED LED ON (0010 0000)
           //*myPORT_B &=  0x00;               //to turn them all off
           //*myPORT_B |=  0x20;               //to turn on RED LED
 
@@ -199,23 +198,23 @@ void loop()
 
           if(water_level < w_threshold)
           {
-            //ERROR state
+            // ERROR state
 
-            //error message
-            //Serial.println("Water level is too LOW");
+            // error message
+            // Serial.println("Water level is too LOW");
 
-            //RED LED ON (0010 0000)
+            // RED LED ON (0010 0000)
             //*myPORT_B &=  0x00;               //to turn them all off
             //*myPORT_B |=  0x20;               //to turn on RED LED
 
           }
         }
 */
-      //makes sure that counter increments by one per pressed button
+      // Makes sure that counter increments by one per pressed button
       while (!(*myPIN_H & 0x40));
 
+      }
     }
-  }
 
   }
 
@@ -248,10 +247,6 @@ void loop()
     }
   }
 }
-
-
-
-
 
 
 
