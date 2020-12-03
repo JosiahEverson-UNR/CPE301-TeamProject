@@ -46,11 +46,24 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (l
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-//water level threshold
+// Initializations OR Declarations
+
+// Global Variables
+// Water level threshold
 #define w_threshold 200
-//temperature threshold
+// Temperature threshold
 #define t_threshold 25
 
+//Initialize LCD
+// RS: Pin 8, PH5
+// Enabler: 7, PH4
+// D4: 6, PH3
+// D5: 5, PH
+// D6: 4,
+// D7: 3,
+LiquidCrystal lcd(8,7,6,5,4,3);
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void setup()
 {
@@ -80,6 +93,28 @@ void setup()
 
 }
 
+/*
+BUCKET:
+
+    // CLears Display
+    lcd.clear();
+    // Abbreviated to display temperature on one line
+    lcd.print("Temp: ");
+    // Displays Temperature Value from DHT function
+    //lcd.print("DHT.temperature");
+    // Prints degree symbol
+    lcd.print((char)223);
+    // prints "C" for Celsius
+    lcd.print("C");
+    // Adds new line
+    lcd.setCursor(0,1);
+    lcd.print("Humidity: ");
+    // Displays Humidity Value from DHT function
+    //lcd.print("DHT.humidity");
+    lcd.print("%");
+
+*/
+
 void loop()
 {
   // Water Sensor: PK0
@@ -89,6 +124,11 @@ void loop()
   // prints adc
   // print_int(adc_reading);
   Serial.println(water_level);
+
+  // Thermometer/ Temperature Sensor
+
+  //RS can be anything, selects register we'll be using (H port)
+  //enabler PWM
 
 
   // LEDs Location:
