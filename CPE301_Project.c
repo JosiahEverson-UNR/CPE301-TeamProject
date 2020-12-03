@@ -1,3 +1,6 @@
+
+//***** NEEDS CODE
+
 // Libraries
 #include <Arduino.h>
 #include <Wire.h>
@@ -51,6 +54,8 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (l
 
 void setup()
 {
+  adc_init();
+
   Serial.begin(9600);
 
   // Set up the ddr, port registers for input and output ports
@@ -71,11 +76,21 @@ void setup()
   // & 1111 1111 (0xFF) makes all bits to output
   *myDDR_F &= 0xFF;
   // | 1000 0000 (0x80) enables internal pull-up resistor
-  *myPORT_B |= 0x80;
+  *myPORT_F |= 0x80;
+
 }
 
 void loop()
 {
+  // Water Sensor: PK0
+
+  // water level = adc_reading
+  unsigned int water_level = adc_read(0);
+  // prints adc
+  // print_int(adc_reading);
+  Serial.println(water_level);
+
+
   // LEDs Location:
   // PB7 - GREEN (IDLE) LED,
   // PB6 - YELLOW (DISABLED) LED,
@@ -83,7 +98,7 @@ void loop()
   // PB4 - BLUE (RUNNING) LED
   // PH6 - Push Button
 
-  // if the system is disabled or OFF
+  // if the system is disabled or OFF ******
   if()
   {
     //checks whether the button is pushed; checks bit 6 (0100 0000)
@@ -194,7 +209,7 @@ void loop()
   }
 }
 
-// Water Sensor: PK0
+
 
 
 
