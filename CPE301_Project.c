@@ -1,3 +1,12 @@
+// Libraries
+#include <Arduino.h>
+#include <Wire.h>
+//Elegoo
+#include <dht_nonblocking.h>
+#include <LiquidCrystal.h>
+
+
+
 //PORT B DECLARATION: Used as an input for the LEDs
 volatile unsigned char* myPORT_B = (unsigned char*) 0x25;
 volatile unsigned char* myDDR_B  = (unsigned char*) 0x24;
@@ -12,6 +21,11 @@ volatile unsigned char* myPIN_H  = (unsigned char*) 0x100;
 volatile unsigned char* myPORT_F = (unsigned char*) 0x31;
 volatile unsigned char* myDDR_F  = (unsigned char*) 0x30;
 volatile unsigned char* myPIN_F  = (unsigned char*) 0x2F;
+
+//PORT K DECLARATION: Analog
+volatile unsigned char* myPORT_K = (unsigned char*) 0x108;
+volatile unsigned char* myDDR_K  = (unsigned char*) 0x107;
+volatile unsigned char* myPIN_K  = (unsigned char*) 0x106;
 
 //ADC Registers
 volatile unsigned char* my_ADMUX     = (unsigned char*) 0x7C;
@@ -180,6 +194,7 @@ void loop()
   }
 }
 
+// Water Sensor: PK0
 
 
 
