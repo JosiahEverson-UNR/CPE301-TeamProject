@@ -19,6 +19,14 @@ volatile unsigned char* my_ADCSRA    = (unsigned char*) 0x7A;
 volatile unsigned char* my_ADCSRB    = (unsigned char*) 0x7B;
 volatile unsigned int*  my_ADC_DATA  = (unsigned int*)  0x78;
 
+//TIMER Registers
+volatile unsigned char *myTCCR1A = (unsigned char*) 0x80;      //for timer, can decide when to start/stop counting
+volatile unsigned char *myTCCR1B = (unsigned char*) 0x81;
+volatile unsigned char *myTCCR1C = (unsigned char*) 0x82;
+volatile unsigned char *myTIMSK1 = (unsigned char*) 0x6F;      //reset TOV bit
+volatile unsigned int  *myTCNT1  = (unsigned int*)  0x84;      //Notes: TCNT increments every clk tick (62.5 nsec), when it hits max, it flips TOV bit then resets to 0.
+volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (locate which bit)
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 //water level threshold
@@ -281,9 +289,48 @@ void adc_init()
   //return the result in the ADC data register
   return *my_ADC_DATA;
 
-  //
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/*
+
+//~~~~~~~~~~~~~~~~setup timer register FUNCTION~~~~~~~~~~~~~~~~~~~
+void setup_timer_regs()
+{
+  // Setup the Timer Control Registers
+  // 0000 0000 & 0000 0000 = 0000 000{0}
+  *myTCCR1A &= 0x00;
+  *myTCCR1B &= 0x00;
+  *myTCCR1C &= 0x00;
+
+  // Reset the TOV Flag:       0000 0000 | 0000 0001 = 0000 000{1}
+  *myTIFR1 |= 0x01;
+  // Enable the TOV Interrupt: 0000 0000 | 0000 0001 = 0000 000{1}
+  *myTIMSK1 |= 0x01;
+}
 
 
+//~~~~~~~~~~~~~~~~~~TIMER OVERFLOW ISR~~~~~~~~~~~~~~~~~~~
+// Gets called once the Flag is Set
+ISR(TIMER1_OVF_vect)
+{
+   // Stop Timer:      0000 0000 & 1111 1110 = 0000 000{0}
+   *myTCCR1B &= 0xFE;
+   // Load the Count (TCNT Register)
+   *myTCNT1 |= 65536 - char_tick;
+   // Start the Timer: 0000 0000 | 0000 0001 = 0000 000{1}
+   *myTCCR1B |= 0x01;
+
+  // if it's not the STOP amount
+  if (char_tick != 65535)
+  {
+    //XOR to toggle PB6:
+    // 0000 0000 ^ 0100 0000 = 0{1}00 0000
+    // 0100 0000 ^ 0100 0000 = 0{0}00 0000
+    *port_B ^= 0x40;
+  }
+}
+
+*/
 
 /*
 Ignore these:
