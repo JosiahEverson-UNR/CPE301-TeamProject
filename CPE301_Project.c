@@ -230,7 +230,7 @@ unsigned int state_checker0 (int water_level, int temperature)
   // ===IDLE State===
 
   // GREEN LED ON (1000 0000)
-  *myPORT_B &=  0x00;               //to turn them all off
+  //*myPORT_B &=  0x00;               //to turn them all off
   *myPORT_B |=  0x80;               //to turn on GREEN LED
   // Time stamps
   //*****
@@ -282,7 +282,7 @@ unsigned int state_checker0 (int water_level, int temperature)
     // Monitor water level
 
     // GREEN LED ON (1000 0000)
-    *myPORT_B &=  0x00;               //to turn them all off
+    //*myPORT_B &=  0x00;               //to turn them all off
     *myPORT_B |=  0x80;               //to turn on GREEN LED
 
 
@@ -305,7 +305,7 @@ void state_checker1 ()
   //not monitoring any temperature or water level
 
   //Yellow LED on
-  *myPORT_B &=  0x00;               //to turn them all off
+  //*myPORT_B &=  0x00;               //to turn them all off
   *myPORT_B |=  0x02;               //to turn on Yellow LED
 }
 
