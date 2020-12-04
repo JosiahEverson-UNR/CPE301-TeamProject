@@ -7,6 +7,29 @@
 #include <LiquidCrystal.h>
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//Terminology used
+/*
+  OPERATING/ENABLED Mode (ON) = When the system is currently simulating CODE
+
+  DISABLED Mode (OFF) = When the system is not monitoring temperature and water level.
+                  Also, the fan motor is OFF.
+
+  RUNNING State = The water_level is above the w_threshold AND the temperature is
+                  ABOVE the t_threshold so the fan is turned ON.
+                  {It's hot enough so one turns on the fan to cool themself}
+
+  ERROR State = The water_level is LOW so the fan is turned OFF. The temperature doesn't
+                matter. {If the water is seen as power and it runs low, the motor won't be
+                able to function}
+
+  (Extra/Added State)
+  TEMP_MATCH State = This is when water level is above the threshold while temperature
+                     is lower than the t_threshold so the fan motor is turned off.
+                     {It's cool enough that one doesn't need the fan anymore.}
+
+*/
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //REGISTERS
 
 //PORT B DECLARATION: Used as an input for the LEDs
@@ -19,7 +42,7 @@ volatile unsigned char* myPORT_H = (unsigned char*) 0x102;
 volatile unsigned char* myDDR_H  = (unsigned char*) 0x101;
 volatile unsigned char* myPIN_H  = (unsigned char*) 0x100;
 
-//PORT F DECLARATION:
+//PORT F DECLARATION: Analog
 volatile unsigned char* myPORT_F = (unsigned char*) 0x31;
 volatile unsigned char* myDDR_F  = (unsigned char*) 0x30;
 volatile unsigned char* myPIN_F  = (unsigned char*) 0x2F;
@@ -53,8 +76,18 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (l
 // Temperature threshold
 #define t_threshold 25
 
-// float?
-unsigned int humidity = 0;
+// ANALOG PINS:
+// A0, PF0: Water sensor
+// A1, PF1: Temperature and Humidity Sensor
+
+// Analog Pin sensor is connected to A1
+#define DHT_APIN A1
+
+dht DHT;
+
+// Initialize both temperature and humidity variables
+unsigned float temperature = 0;
+unsigned float humidity = 0;
 
 // State Check Variables
 // Whenever the counter is:
@@ -111,43 +144,51 @@ void setup()
 WORK BUCKET:
     //***** NEEDS CODE
 
-1. Whether to separate every state into each function
+    // X means it's done
+
+1. [] Whether to separate every state into different functions
    so that lcd can be displayed to each IDLE STATE.
 
    lcd_display (temperature, humidity);
 
-2. Integrate motor into code.
+2. [] Integrate motor into code.
 
-3. Temperature reading
+3. [X] Temperature reading
 
-4. Humidity reading
+4. [X] Humidity reading
 
-5. Vent angle
+5. [] Vent angle
 
-6. Add Timer to record time whenever the system changes state.
+6. [] Add Timer to record time whenever the system changes state.
 
-7. Physically build the circuit
+7. [] Physically build the circuit
 
-8. Project Report
-
-
-
+8. [] Project Report
 
 */
 
 void loop()
 {
-  // Water Sensor: PK0
+  // Water Sensor: PF0 or A0
 
   // water level = adc_reading, channel 0
   unsigned int water_level = adc_read(0);
-  // prints adc
-  // print_int(adc_reading);
+  //OR
+  //unsigned int water_level = analogRead(A0);
+
+  // prints water level
   Serial.println(water_level);
 
-  // Thermometer/Temperature Sensor
-  //*****
-  //unsigned int temperature = 0;
+  // Thermometer/Temperature & Humidity Sensor Reading
+  DHT.read11(DHT_APIN);
+  temperature = DHT.temperature;
+  humidity = DHT.humidty;
+
+  //function to display on LCD
+  lcd_display(temperature, humidity);
+
+  //Wait 5 seconds before reading from sensor again.
+  //delay(5000);
 
   // If the system is disabled or OFF ******
   if(state_counter == 0)
@@ -238,7 +279,7 @@ unsigned int state_checker0 (int water_level, int temperature)
   // Monitor water level
   // If statement if the water level is under the threshold (low)
 
-  if(water_level < w_threshold)
+  if(water_level < w_threshold && temperature < t_threshold)
   {
     // ===ERROR State===
 
@@ -312,14 +353,14 @@ void state_checker1 ()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LCD Display Function
 
-unsigned int lcd_display (int temperature, int humidity)
+unsigned float lcd_display (int temperature, int humidity)
 {
   // CLears Display
   lcd.clear();
   // Abbreviated to display temperature on one line
   lcd.print("Temp: ");
   // Displays Temperature Value from DHT function
-  //lcd.print("DHT.temperature");
+  lcd.print(temperature);
   // Prints degree symbol
   lcd.print((char)223);
   // prints "C" for Celsius
@@ -328,10 +369,29 @@ unsigned int lcd_display (int temperature, int humidity)
   lcd.setCursor(0,1);
   lcd.print("Humidity: ");
   // Displays Humidity Value from DHT function
-  //lcd.print("DHT.humidity");
+  lcd.print(humidity);
   lcd.print("%");
 
-  /* Displays
+  /*
+
+  // CLears Display
+  lcd.clear();
+  // Abbreviated to display temperature on one line
+  lcd.print("Temp: ");
+  // Displays Temperature Value from DHT function
+  lcd.print("DHT.temperature");
+  // Prints degree symbol
+  lcd.print((char)223);
+  // prints "C" for Celsius
+  lcd.print("C");
+  // Adds new line
+  lcd.setCursor(0,1);
+  lcd.print("Humidity: ");
+  // Displays Humidity Value from DHT function
+  lcd.print("DHT.humidity");
+  lcd.print("%");
+
+  Displays
 
   Temp: [temperature]oC
   Humidity: [humidity]%
