@@ -444,6 +444,69 @@ void adc_init()
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// Temperature with LCD Sample
+/*
+#include <LiquidCrystal.h>
+int tempPin = 0;
+//                BS  E  D4 D5  D6 D7
+LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+void setup()
+{
+  lcd.begin(16, 2);
+}
+void loop()
+{
+  int tempReading = analogRead(tempPin);
+  // This is OK
+  double tempK = log(10000.0 * ((1024.0 / tempReading - 1)));
+  tempK = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * tempK * tempK )) * tempK );       //  Temp Kelvin
+  float tempC = tempK - 273.15;            // Convert Kelvin to Celcius
+  float tempF = (tempC * 9.0)/ 5.0 + 32.0; // Convert Celcius to Fahrenheit
+
+
+*/
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Temperature & Humidity Sample code
+
+/*
+#include <dht.h>
+
+
+#define dht_apin A0 // Analog Pin sensor is connected to
+
+dht DHT;
+
+void setup(){
+
+  Serial.begin(9600);
+  delay(500);//Delay to let system boot
+  Serial.println("DHT11 Humidity & temperature Sensor\n\n");
+  delay(1000);//Wait before accessing Sensor
+
+}//end "setup()"
+
+void loop(){
+  //Start of Program
+
+    DHT.read11(dht_apin);
+
+    Serial.print("Current humidity = ");
+    Serial.print(DHT.humidity);
+    Serial.print("%  ");
+    Serial.print("temperature = ");
+    Serial.print(DHT.temperature);
+    Serial.println("C  ");
+
+    delay(5000);//Wait 5 seconds before accessing sensor again.
+
+  //Fastest should be once every two seconds.
+
+}// end loop(
+*/
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*
 
 //~~~~~~~~~~~~~~~~setup timer register FUNCTION~~~~~~~~~~~~~~~~~~~
