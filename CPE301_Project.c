@@ -1,5 +1,4 @@
 
-
 // Libraries
 #include <Arduino.h>
 #include <Wire.h>
@@ -7,7 +6,8 @@
 #include <dht_nonblocking.h>
 #include <LiquidCrystal.h>
 
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//REGISTERS
 
 //PORT B DECLARATION: Used as an input for the LEDs
 volatile unsigned char* myPORT_B = (unsigned char*) 0x25;
@@ -53,10 +53,15 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (l
 // Temperature threshold
 #define t_threshold 25
 
+// float?
+unsigned int humidity = 0;
+
 // State Check Variables
 // Whenever the counter is:
 // 0, the system is at DISABLED state
 // 1, the system is OPERATING state (working)
+
+// Starts at DISABLED mode
 unsigned int state_counter = 0;
 
 // Initialize LCD
@@ -96,29 +101,37 @@ void setup()
   // | 1000 0000 (0x80) enables internal pull-up resistor
   *myPORT_F |= 0x80;
 
+  // LCD size
+  lcd.begin(16,2);
+  // Set so that LCD display start on upper-left corner
+  lcd.setCursor(0,0);
 }
 
 /*
 WORK BUCKET:
     //***** NEEDS CODE
 
+1. Whether to separate every state into each function
+   so that lcd can be displayed to each IDLE STATE.
 
-    // CLears Display
-    lcd.clear();
-    // Abbreviated to display temperature on one line
-    lcd.print("Temp: ");
-    // Displays Temperature Value from DHT function
-    //lcd.print("DHT.temperature");
-    // Prints degree symbol
-    lcd.print((char)223);
-    // prints "C" for Celsius
-    lcd.print("C");
-    // Adds new line
-    lcd.setCursor(0,1);
-    lcd.print("Humidity: ");
-    // Displays Humidity Value from DHT function
-    //lcd.print("DHT.humidity");
-    lcd.print("%");
+   lcd_display (temperature, humidity);
+
+2. Integrate motor into code.
+
+3. Temperature reading
+
+4. Humidity reading
+
+5. Vent angle
+
+6. Add Timer to record time whenever the system changes state.
+
+7. Physically build the circuit
+
+8. Project Report
+
+
+
 
 */
 
@@ -132,7 +145,7 @@ void loop()
   // print_int(adc_reading);
   Serial.println(water_level);
 
-  // Thermometer/ Temperature Sensor
+  // Thermometer/Temperature Sensor
   //*****
   //unsigned int temperature = 0;
 
@@ -154,6 +167,8 @@ void loop()
         // 1 % 2 = 1; which means that it's now in OPERATING mode
         state_counter %= 2;
 
+        // LCD display
+        lcd_display (temperature, humidity);
         // Function is called to determine the current states
         // Uses water_level and temperature variables as parameters
         state_checker0(water_level, temperature);
@@ -194,12 +209,14 @@ void loop()
 
 }
 
+
+
 //***********************\\FUNCTIONS//********************************
 
 // STATE FUNCTION
 // Filled with IF statements to output each states and their respective functions
 
-void state_checker0 (int water_level, int temperature)
+unsigned int state_checker0 (int water_level, int temperature)
 {
 
   // LEDs Location:
@@ -277,9 +294,10 @@ void state_checker0 (int water_level, int temperature)
 
     // motor is on *****
     // [INSERT CODE]
-  }
 
+  }
 }
+
 
 void state_checker1 ()
 {
@@ -289,6 +307,36 @@ void state_checker1 ()
   //Yellow LED on
   *myPORT_B &=  0x00;               //to turn them all off
   *myPORT_B |=  0x02;               //to turn on Yellow LED
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// LCD Display Function
+
+unsigned int lcd_display (int temperature, int humidity)
+{
+  // CLears Display
+  lcd.clear();
+  // Abbreviated to display temperature on one line
+  lcd.print("Temp: ");
+  // Displays Temperature Value from DHT function
+  //lcd.print("DHT.temperature");
+  // Prints degree symbol
+  lcd.print((char)223);
+  // prints "C" for Celsius
+  lcd.print("C");
+  // Adds new line
+  lcd.setCursor(0,1);
+  lcd.print("Humidity: ");
+  // Displays Humidity Value from DHT function
+  //lcd.print("DHT.humidity");
+  lcd.print("%");
+
+  /* Displays
+
+  Temp: [temperature]oC
+  Humidity: [humidity]%
+
+  */
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
