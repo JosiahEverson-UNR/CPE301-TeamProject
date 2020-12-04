@@ -55,13 +55,13 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (l
 
 // State Check Variables
 // Whenever the counter is:
-// 0, the system is at DOSABLED state
+// 0, the system is at DISABLED state
 // 1, the system is OPERATING state (working)
 unsigned int state_counter = 0;
 
 // Initialize LCD
 // RS: Pin 8, PH5
-// Enabler: 7, PH4
+// Enabler (E): 7, PH4
 // D4: 6, PH3
 // D5: 5, PH
 // D6: 4,
@@ -231,6 +231,26 @@ void state_checker0 (int water_level, int temperature)
 
     // Error Message
     //Serial.println("Water level is too LOW");
+
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // Continuously check the water level
+    while (water_level < w_threshold)
+    {
+      if(water_level < w_threshold)
+      {
+        // ===ERROR State===
+
+        // RED LED ON (0010 0000)
+        *myPORT_B &=  0x00;               //to turn them all off
+        *myPORT_B |=  0x20;               //to turn on RED LED
+
+      }
+
+      if(water_level > w_threshold)
+      {
+
+      }
+    }
   }
 
 
@@ -259,23 +279,6 @@ void state_checker0 (int water_level, int temperature)
     // [INSERT CODE]
   }
 
-/*
-    // Error Message if water level < threshold
-
-    if(water_level < w_threshold)
-    {
-      // ERROR state
-
-      // error message
-      // Serial.println("Water level is too LOW");
-
-      // RED LED ON (0010 0000)
-      //*myPORT_B &=  0x00;               //to turn them all off
-      //*myPORT_B |=  0x20;               //to turn on RED LED
-
-    }
-*/
-
 }
 
 void state_checker1 ()
@@ -283,7 +286,7 @@ void state_checker1 ()
   // ===DISABLED State===
   //not monitoring any temperature or water level
 
-  //Yellow light on
+  //Yellow LED on
   *myPORT_B &=  0x00;               //to turn them all off
   *myPORT_B |=  0x02;               //to turn on Yellow LED
 }
