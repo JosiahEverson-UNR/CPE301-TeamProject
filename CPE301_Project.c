@@ -7,13 +7,15 @@
 #include <LiquidCrystal.h>
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//Terminology used
+//Terminology Used
 /*
-  OPERATING/ENABLED Mode (ON) = When the system is currently simulating CODE
+[Switch]
+  ENABLED Mode (ON) = When the system is currently simulating CODE
 
   DISABLED Mode (OFF) = When the system is not monitoring temperature and water level.
                   Also, the fan motor is OFF.
 
+[Conditions]
   RUNNING State = The water_level is above the w_threshold AND the temperature is
                   ABOVE the t_threshold so the fan is turned ON.
                   {It's hot enough so one turns on the fan to cool themself}
@@ -59,12 +61,18 @@ volatile unsigned char* my_ADCSRB    = (unsigned char*) 0x7B;
 volatile unsigned int*  my_ADC_DATA  = (unsigned int*)  0x78;
 
 //TIMER Registers
-volatile unsigned char *myTCCR1A = (unsigned char*) 0x80;      //for timer, can decide when to start/stop counting
+volatile unsigned char *myTCCR1A = (unsigned char*) 0x80;
 volatile unsigned char *myTCCR1B = (unsigned char*) 0x81;
 volatile unsigned char *myTCCR1C = (unsigned char*) 0x82;
-volatile unsigned char *myTIMSK1 = (unsigned char*) 0x6F;      //reset TOV bit
-volatile unsigned int  *myTCNT1  = (unsigned int*)  0x84;      //Notes: TCNT increments every clk tick (62.5 nsec), when it hits max, it flips TOV bit then resets to 0.
-volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;      //Contains TOV (locate which bit)
+volatile unsigned char *myTIMSK1 = (unsigned char*) 0x6F;
+volatile unsigned int  *myTCNT1  = (unsigned int*)  0x84;
+volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
+
+// TCCR1A: Can decide when to start/stop counting
+// TIMSK1: Reset TOV bit
+// TCNT1: Increments every clk tick (62.5 nsec). When it hits max, it flips TOV bit
+//        then resets to 0.
+// TIFR1: Contains TOV (locate which bit)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -190,7 +198,7 @@ void loop()
   //Wait 5 seconds before reading from sensor again.
   //delay(5000);
 
-  // If the system is disabled or OFF ******
+  // If the system is DISABLED or OFF ******
   if(state_counter == 0)
   {
     // Checks whether the button is pushed; checks bit 6 (0100 0000)
@@ -205,7 +213,7 @@ void loop()
       {
         // It's currently at 0 then becomes 1
         state_counter++;
-        // 1 % 2 = 1; which means that it's now in OPERATING mode
+        // 1 % 2 = 1; which means that it's now in ENABLED Mode
         state_counter %= 2;
 
         // LCD display
@@ -227,7 +235,8 @@ void loop()
     //checks whether the button is pushed; checks bit 7
     if (!(*myPIN_B & 0x80))
     {
-      //a loop that does nothing to make sure noise is not included (which occurs at a micro second)
+      //a loop that does nothing to make sure noise is not included
+      //(which occurs at a micro second)
       for (volatile unsigned int i = 0; i < 1000; i++);
 
       //checks again if the button is pressed
@@ -277,9 +286,12 @@ unsigned int state_checker0 (int water_level, int temperature)
   //*****
 
   // Monitor water level
-  // If statement if the water level is under the threshold (low)
 
-  if(water_level < w_threshold && temperature < t_threshold)
+  // If statement if the water level is under the threshold (low)
+  //Temperature doesn't matter
+
+  // +++ERROR Condition+++
+  if(water_level < w_threshold)
   {
     // ===ERROR State===
 
@@ -312,9 +324,11 @@ unsigned int state_checker0 (int water_level, int temperature)
   }
 
 
-  // If the water level is above the threshold (high)
+  // If the water level is above the w_threshold
+  // Temperature is above the t_threshold
 
-  if(water_level > w_threshold)
+  // +++OPERATING Condition+++
+  if(water_level > w_threshold && temperature > t_threshold)
   {
 
     // ===IDLE State===
@@ -337,12 +351,40 @@ unsigned int state_checker0 (int water_level, int temperature)
     // [INSERT CODE]
 
   }
+
+  // If the water level is above the w_threshold
+  // Temperature is under the t_threshold
+
+  // +++TEMP_MATCH Condition+++
+  if(water_level > w_threshold && temperature < t_threshold)
+  {
+
+    // ===IDLE State===
+
+    // Time stamps
+    // Monitor water level
+
+    // GREEN LED ON (1000 0000)
+    //*myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x80;               //to turn on GREEN LED
+
+
+    // ===RUNNING State===
+
+    // BLUE LED ON (0001 0000)
+    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x10;               //to turn on BLUE LED
+
+    // motor is OFF *****
+    // [INSERT CODE]
+
+  }
 }
 
 
 void state_checker1 ()
 {
-  // ===DISABLED State===
+  // ---DISABLED Mode---
   //not monitoring any temperature or water level
 
   //Yellow LED on
