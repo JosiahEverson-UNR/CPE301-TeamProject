@@ -149,12 +149,45 @@ void loop()
       // Checks again if the button is pressed
       if (!(*myPIN_H & 0x40))
       {
+        // It's currently at 0 then becomes 1
+        state_counter++;
+        // 1 % 2 = 1; which means that it's now in OPERATING mode
+        state_counter %= 2;
+
         // Function is called to determine the current states
         // Uses water_level and temperature variables as parameters
-        state_checker(water_level, temperature);
+        state_checker0(water_level, temperature);
 
         // Makes sure that counter increments by one per pressed button
         while (!(*myPIN_H & 0x40));
+      }
+    }
+  }
+
+
+  //if the system is ON
+  if(state_counter == 1)
+  {
+    //checks whether the button is pushed; checks bit 7
+    if (!(*myPIN_B & 0x80))
+    {
+      //a loop that does nothing to make sure noise is not included (which occurs at a micro second)
+      for (volatile unsigned int i = 0; i < 1000; i++);
+
+      //checks again if the button is pressed
+      if (!(*myPIN_B & 0x80))
+      {
+        // It's currently at 1 then becomes 0
+        state_counter++;
+        // 0 % 2 = 0; which means that it's now in DISABLED mode
+        state_counter %= 2;
+
+        // Function makes the system DISABLED mode
+        state_checker1();
+
+        //makes sure that counter increments by one per pressed button
+        while (!(*myPIN_B & 0x80));
+
       }
     }
   }
@@ -166,7 +199,7 @@ void loop()
 // STATE FUNCTION
 // Filled with IF statements to output each states and their respective functions
 
-void state_checker (int waterlevel, int temp)
+void state_checker0 (int water_level, int temperature)
 {
 
   // LEDs Location:
@@ -179,50 +212,54 @@ void state_checker (int waterlevel, int temp)
 
   // ===IDLE State===
 
+  // GREEN LED ON (1000 0000)
+  *myPORT_B &=  0x00;               //to turn them all off
+  *myPORT_B |=  0x80;               //to turn on GREEN LED
   // Time stamps
-  // Monitor water level
+  //*****
 
+  // Monitor water level
   // If statement if the water level is under the threshold (low)
 
-/*   if(water_level < w_threshold)
-     {
-      // ERROR state
+  if(water_level < w_threshold)
+  {
+    // ===ERROR State===
 
-      // Error message
-      //Serial.println("Water level is too LOW");
+    // RED LED ON (0010 0000)
+    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x20;               //to turn on RED LED
 
-      // RED LED ON (0010 0000)
-      //*myPORT_B &=  0x00;               //to turn them all off
-      //*myPORT_B |=  0x20;               //to turn on RED LED
+    // Error Message
+    //Serial.println("Water level is too LOW");
+  }
 
-      }
-
-*/
 
   // If the water level is above the threshold (high)
 
-/*   if(water_level > w_threshold)
-    {
+  if(water_level > w_threshold)
+  {
 
-      // IDLE State
+    // ===IDLE State===
 
-      // Time stamps
-      // Monitor water level
+    // Time stamps
+    // Monitor water level
 
-      // GREEN LED ON (1000 0000)
-      //*myPORT_B &=  0x00;               //to turn them all off
-      //*myPORT_B |=  0x80;               //to turn on GREEN LED
+    // GREEN LED ON (1000 0000)
+    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x80;               //to turn on GREEN LED
 
 
-      // RUNNING State
+    // ===RUNNING State===
 
-      // motor is on *****
-      // [INSERT CODE]
-      // BLUE LED ON (0001 0000)
-      //*myPORT_B &=  0x00;               //to turn them all off
-      //*myPORT_B |=  0x10;               //to turn on BLUE LED
-    }
+    // BLUE LED ON (0001 0000)
+    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x10;               //to turn on BLUE LED
 
+    // motor is on *****
+    // [INSERT CODE]
+  }
+
+/*
     // Error Message if water level < threshold
 
     if(water_level < w_threshold)
@@ -239,38 +276,16 @@ void state_checker (int waterlevel, int temp)
     }
 */
 
+}
 
-        }
-      }
+void state_checker1 ()
+{
+  // ===DISABLED State===
+  //not monitoring any temperature or water level
 
-
-    //if the system is ON
-     if(state_counter == 1)
-     {
-       //checks whether the button is pushed; checks bit 7
-       if (!(*myPIN_B & 0x80))
-       {
-         //a loop that does nothing to make sure noise is not included (which occurs at a micro second)
-         for (volatile unsigned int i = 0; i < 1000; i++);
-
-         //checks again if the button is pressed
-         if (!(*myPIN_B & 0x80))
-         {
-
-           //DISABLED State
-           //not monitoring any temperature or water level
-
-           //Yellow light on
-           //*myPORT_B &=  0x00;               //to turn them all off
-           //*myPORT_B |=  0x02;               //to turn on Yellow LED
-
-           //makes sure that counter increments by one per pressed button
-           while (!(*myPIN_B & 0x80));
-
-        }
-      }
-    }
-
+  //Yellow light on
+  *myPORT_B &=  0x00;               //to turn them all off
+  *myPORT_B |=  0x02;               //to turn on Yellow LED
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
