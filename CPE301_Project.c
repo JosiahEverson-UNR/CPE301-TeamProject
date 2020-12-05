@@ -382,6 +382,15 @@ unsigned float lcd_display (float temperature, float humidity)
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Convert Temperature from Fahrenheit to Celcius
+//******
+
+unsigned float f_to_c (float temperature)
+{
+
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ADC Functions
 
 void adc_init()
