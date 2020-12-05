@@ -215,68 +215,48 @@ void loop()
   //function to display on LCD
   lcd_display(temperature, humidity);
 
+  // Checks whether the button is pushed; checks bit 6 (0100 0000)
+  if (!(*myPIN_H & 0x40))
+  {
+    // A loop that does nothing to make sure noise is not included
+    // (which occurs at a micro second)
+    for (volatile unsigned int i = 0; i < 1000; i++);
+
+    // Checks again if the button is pressed
+    if (!(*myPIN_H & 0x40))
+    {
+      // It's currently at 0 then becomes 1
+      state_counter++;
+      // 1 % 2 = 1; which means that it's now in ENABLED Mode
+      state_counter %= 2;
+
+      // Makes sure that counter increments by one per pressed button
+      while (!(*myPIN_H & 0x40));
+    }
+  }
+
+  //????? put out the button and counter out the state counter if statement
   // If the system is DISABLED or OFF ******
   if(state_counter == 0)
   {
-    // Checks whether the button is pushed; checks bit 6 (0100 0000)
-    if (!(*myPIN_H & 0x40))
-    {
-      // A loop that does nothing to make sure noise is not included
-      // (which occurs at a micro second)
-      for (volatile unsigned int i = 0; i < 1000; i++);
+    // LCD display
+    lcd_display (temperature, humidity);
 
-      // Checks again if the button is pressed
-      if (!(*myPIN_H & 0x40))
-      {
-        // It's currently at 0 then becomes 1
-        state_counter++;
-        // 1 % 2 = 1; which means that it's now in ENABLED Mode
-        state_counter %= 2;
+    // Function is called to determine the current states
+    // Uses water_level and temperature variables as parameters
 
-        // LCD display
-        lcd_display (temperature, humidity);
-        // Function is called to determine the current states
-        // Uses water_level and temperature variables as parameters
-        state_checker0(water_level, temperature);
+    // Only one of these functions is going to get called
+    idle_state(water_level, temperature);
+    error_state(water_level, temperature);
+    running_state(water_level, temperature);
 
-        // Makes sure that counter increments by one per pressed button
-        while (!(*myPIN_H & 0x40));
-      }
     }
-  }
-
-
-  //if the system is ON
-  if(state_counter == 1)
+  else
   {
-    //checks whether the button is pushed; checks bit 7
-    if (!(*myPIN_B & 0x80))
-    {
-      //a loop that does nothing to make sure noise is not included
-      //(which occurs at a micro second)
-      for (volatile unsigned int i = 0; i < 1000; i++);
+    // Function makes the system DISABLED mode
+    disabled_mode();
 
-      //checks again if the button is pressed
-      if (!(*myPIN_B & 0x80))
-      {
-        // It's currently at 1 then becomes 0
-        state_counter++;
-        // 0 % 2 = 0; which means that it's now in DISABLED mode
-        state_counter %= 2;
-
-        // Function makes the system DISABLED mode
-        state_checker1();
-
-        //makes sure that counter increments by one per pressed button
-        while (!(*myPIN_B & 0x80));
-
-      }
-    }
   }
-
-}
-
-
 
 //***********************\\FUNCTIONS//********************************
 
@@ -315,15 +295,6 @@ void idle_state (int water_level, float temperature)
   }
 }
 
-  // ===IDLE State===
-
-  // GREEN LED ON (1000 0000)
-  //*myPORT_B &=  0x00;               //to turn them all off
-  //*myPORT_B |=  0x80;               //to turn on GREEN LED
-  // Time stamps
-  //*****
-
-  // Monitor water level
 
   // If statement if the water level is under the threshold (low)
   //Temperature doesn't matter
@@ -579,6 +550,15 @@ void loop(){
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*
+// ===IDLE State===
+
+// GREEN LED ON (1000 0000)
+//*myPORT_B &=  0x00;               //to turn them all off
+//*myPORT_B |=  0x80;               //to turn on GREEN LED
+// Time stamps
+//*****
+
+// Monitor water level
 
 //~~~~~~~~~~~~~~~~setup timer register FUNCTION~~~~~~~~~~~~~~~~~~~
 void setup_timer_regs()
