@@ -49,10 +49,17 @@ volatile unsigned char* myPORT_F = (unsigned char*) 0x31;
 volatile unsigned char* myDDR_F  = (unsigned char*) 0x30;
 volatile unsigned char* myPIN_F  = (unsigned char*) 0x2F;
 
+//PORT E DECLARATION: Fan Motor
+volatile unsigned char* myPORT_E = (unsigned char*) 0x2E;
+volatile unsigned char* myDDR_E  = (unsigned char*) 0x2D;
+volatile unsigned char* myPIN_E  = (unsigned char*) 0x2C;
+
+/*
 //PORT K DECLARATION: Analog
 volatile unsigned char* myPORT_K = (unsigned char*) 0x108;
 volatile unsigned char* myDDR_K  = (unsigned char*) 0x107;
 volatile unsigned char* myPIN_K  = (unsigned char*) 0x106;
+*/
 
 //ADC Registers
 volatile unsigned char* my_ADMUX     = (unsigned char*) 0x7C;
@@ -79,19 +86,25 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // Initializations OR Declarations
 
 // Global Variables
-// Water level threshold
+// Water level hreshold
 #define w_threshold 200
 // Temperature threshold
 #define t_threshold 25
 
+// DHT Related Variables
 // ANALOG PINS:
 // A0, PF0: Water sensor
 // A1, PF1: Temperature and Humidity Sensor
 
 // Analog Pin sensor is connected to A1
 #define DHT_APIN A1
+//#define DHTTYPE DHT11
 
 dht DHT;
+
+//Motor Related Variables
+// motor pin: PIN2, PE4
+unsigned int motor_speed = 50;
 
 // Initialize both temperature and humidity variables
 unsigned float temperature = 0;
@@ -141,6 +154,12 @@ void setup()
   *myDDR_F &= 0xFF;
   // | 1000 0000 (0x80) enables internal pull-up resistor
   *myPORT_F |= 0x80;
+
+  //PORT E: Motor PIN (PE4)
+  // & 0001 0000 (0xFF) makes all bits to output
+  *myDDR_E &= 0x10;
+  // | 0001 0000 (0x80) enables internal pull-up resistor
+  *myPORT_E |= 0x10;
 
   // LCD size
   lcd.begin(16,2);
@@ -290,10 +309,9 @@ unsigned int state_checker0 (int water_level, int temperature)
   // If statement if the water level is under the threshold (low)
   //Temperature doesn't matter
 
-  // +++ERROR Condition+++
+  // ===ERROR State===
   if(water_level < w_threshold)
   {
-    // ===ERROR State===
 
     // RED LED ON (0010 0000)
     *myPORT_B &=  0x00;               //to turn them all off
@@ -327,21 +345,10 @@ unsigned int state_checker0 (int water_level, int temperature)
   // If the water level is above the w_threshold
   // Temperature is above the t_threshold
 
-  // +++OPERATING Condition+++
+  // ===RUNNING State===
   if(water_level > w_threshold && temperature > t_threshold)
   {
-
-    // ===IDLE State===
-
-    // Time stamps
-    // Monitor water level
-
-    // GREEN LED ON (1000 0000)
-    //*myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x80;               //to turn on GREEN LED
-
-
-    // ===RUNNING State===
+    // Time Stamp
 
     // BLUE LED ON (0001 0000)
     *myPORT_B &=  0x00;               //to turn them all off
@@ -355,13 +362,11 @@ unsigned int state_checker0 (int water_level, int temperature)
   // If the water level is above the w_threshold
   // Temperature is under the t_threshold
 
-  // +++TEMP_MATCH Condition+++
+  // ===IDLE State===
   if(water_level > w_threshold && temperature < t_threshold)
   {
 
-    // ===IDLE State===
-
-    // Time stamps
+    // Time Stamp
     // Monitor water level
 
     // GREEN LED ON (1000 0000)
