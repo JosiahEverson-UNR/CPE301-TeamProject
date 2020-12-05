@@ -5,7 +5,9 @@
 //Elegoo
 #include <dht_nonblocking.h>
 #include <LiquidCrystal.h>
-
+#include <Adafruit_Sensor.h>
+#include <DS3231.h>
+#include <Servo.h>
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Terminology Used
 /*
@@ -24,8 +26,7 @@
                 matter. {If the water is seen as power and it runs low, the motor won't be
                 able to function}
 
-  (Extra/Added State)
-  TEMP_MATCH State = This is when water level is above the threshold while temperature
+  IDLE State = This is when water level is above the threshold while temperature
                      is lower than the t_threshold so the fan motor is turned off.
                      {It's cool enough that one doesn't need the fan anymore.}
 
@@ -98,9 +99,8 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 
 // Analog Pin sensor is connected to A1
 #define DHT_APIN A1
-//#define DHTTYPE DHT11
-
-dht DHT;
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
 
 //Motor Related Variables
 // motor pin: PIN2, PE4
@@ -192,6 +192,8 @@ WORK BUCKET:
 
 8. [] Project Report
 
+9. [] Convert Temperature to Celcius
+
 */
 
 void loop()
@@ -207,15 +209,11 @@ void loop()
   Serial.println(water_level);
 
   // Thermometer/Temperature & Humidity Sensor Reading
-  DHT.read11(DHT_APIN);
-  temperature = DHT.temperature;
-  humidity = DHT.humidty;
+  temperature = dht.readTemperature(true);
+  humidity = dht.readhumidty();
 
   //function to display on LCD
   lcd_display(temperature, humidity);
-
-  //Wait 5 seconds before reading from sensor again.
-  //delay(5000);
 
   // If the system is DISABLED or OFF ******
   if(state_counter == 0)
@@ -285,89 +283,20 @@ void loop()
 // STATE FUNCTION
 // Filled with IF statements to output each states and their respective functions
 
-unsigned int state_checker0 (int water_level, int temperature)
+// LEDs Location:
+// PB7 - GREEN (IDLE) LED,
+// PB6 - YELLOW (DISABLED) LED,
+// PB5 - RED (ERROR) LED,
+// PB4 - BLUE (RUNNING) LED
+// PH6 - Push Button
+
+void idle_state (int water_level, float temperature)
 {
-
-  // LEDs Location:
-  // PB7 - GREEN (IDLE) LED,
-  // PB6 - YELLOW (DISABLED) LED,
-  // PB5 - RED (ERROR) LED,
-  // PB4 - BLUE (RUNNING) LED
-  // PH6 - Push Button
-
-
-  // ===IDLE State===
-
-  // GREEN LED ON (1000 0000)
-  //*myPORT_B &=  0x00;               //to turn them all off
-  *myPORT_B |=  0x80;               //to turn on GREEN LED
-  // Time stamps
-  //*****
-
-  // Monitor water level
-
-  // If statement if the water level is under the threshold (low)
-  //Temperature doesn't matter
-
-  // ===ERROR State===
-  if(water_level < w_threshold)
-  {
-
-    // RED LED ON (0010 0000)
-    *myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x20;               //to turn on RED LED
-
-    // Error Message
-    //Serial.println("Water level is too LOW");
-
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    // Continuously check the water level
-    while (water_level < w_threshold)
-    {
-      if(water_level < w_threshold)
-      {
-        // ===ERROR State===
-
-        // RED LED ON (0010 0000)
-        *myPORT_B &=  0x00;               //to turn them all off
-        *myPORT_B |=  0x20;               //to turn on RED LED
-
-      }
-
-      if(water_level > w_threshold)
-      {
-
-      }
-    }
-  }
-
-
-  // If the water level is above the w_threshold
-  // Temperature is above the t_threshold
-
-  // ===RUNNING State===
-  if(water_level > w_threshold && temperature > t_threshold)
-  {
-    // Time Stamp
-
-    // BLUE LED ON (0001 0000)
-    *myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x10;               //to turn on BLUE LED
-
-    // motor is on *****
-    // [INSERT CODE]
-
-  }
-
-  // If the water level is above the w_threshold
-  // Temperature is under the t_threshold
-
   // ===IDLE State===
   if(water_level > w_threshold && temperature < t_threshold)
   {
 
     // Time Stamp
-    // Monitor water level
 
     // GREEN LED ON (1000 0000)
     //*myPORT_B &=  0x00;               //to turn them all off
@@ -386,8 +315,60 @@ unsigned int state_checker0 (int water_level, int temperature)
   }
 }
 
+  // ===IDLE State===
 
-void state_checker1 ()
+  // GREEN LED ON (1000 0000)
+  //*myPORT_B &=  0x00;               //to turn them all off
+  //*myPORT_B |=  0x80;               //to turn on GREEN LED
+  // Time stamps
+  //*****
+
+  // Monitor water level
+
+  // If statement if the water level is under the threshold (low)
+  //Temperature doesn't matter
+void error_state (int water_level, float temperature)
+{
+  // ===ERROR State===
+  if(water_level <= w_threshold)
+  {
+
+    // RED LED ON (0010 0000)
+    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x20;               //to turn on RED LED
+
+    // Error Message
+    //Serial.println("Water level is too LOW");
+
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // Continuously check the water level
+  }
+}
+
+
+  // If the water level is above the w_threshold
+  // Temperature is above the t_threshold
+void running_state (int water_level, float temperature)
+{
+  // ===RUNNING State===
+  if(water_level > w_threshold && temperature > t_threshold)
+  {
+    // Time Stamp
+
+    // BLUE LED ON (0001 0000)
+    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x10;               //to turn on BLUE LED
+
+    // motor is on *****
+    // [INSERT CODE]
+  }
+
+  // If the water level is above the w_threshold
+  // Temperature is under the t_threshold
+}
+
+
+void disabled_mode ()
 {
   // ---DISABLED Mode---
   //not monitoring any temperature or water level
@@ -400,7 +381,7 @@ void state_checker1 ()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LCD Display Function
 
-unsigned float lcd_display (int temperature, int humidity)
+unsigned float lcd_display (float temperature, float humidity)
 {
   // CLears Display
   lcd.clear();
@@ -420,23 +401,6 @@ unsigned float lcd_display (int temperature, int humidity)
   lcd.print("%");
 
   /*
-
-  // CLears Display
-  lcd.clear();
-  // Abbreviated to display temperature on one line
-  lcd.print("Temp: ");
-  // Displays Temperature Value from DHT function
-  lcd.print("DHT.temperature");
-  // Prints degree symbol
-  lcd.print((char)223);
-  // prints "C" for Celsius
-  lcd.print("C");
-  // Adds new line
-  lcd.setCursor(0,1);
-  lcd.print("Humidity: ");
-  // Displays Humidity Value from DHT function
-  lcd.print("DHT.humidity");
-  lcd.print("%");
 
   Displays
 
