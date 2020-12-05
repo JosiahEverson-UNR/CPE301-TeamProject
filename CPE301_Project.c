@@ -107,7 +107,8 @@ DHT dht(DHTPIN, DHTTYPE);
 unsigned int motor_speed = 50;
 
 // Initialize both temperature and humidity variables
-unsigned float temperature = 0;
+unsigned float temperature_F = 0;
+unsigned float temperature_C = 0;
 unsigned float humidity = 0;
 
 // State Check Variables
@@ -193,6 +194,8 @@ WORK BUCKET:
 8. [] Project Report
 
 9. [] Convert Temperature to Celcius
+      function: line 393
+      call: line 218
 
 */
 
@@ -209,11 +212,15 @@ void loop()
   Serial.println(water_level);
 
   // Thermometer/Temperature & Humidity Sensor Reading
-  temperature = dht.readTemperature(true);
+  temperature_F = dht.readTemperature(true);
+
+  //change the temperature from Fahrenheit to Celcius
+  //temperature_C = f_to_c(temperature_F)
+
   humidity = dht.readhumidty();
 
   //function to display on LCD
-  lcd_display(temperature, humidity);
+  lcd_display(temperature_C, humidity);
 
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
   if (!(*myPIN_H & 0x40))
@@ -240,15 +247,15 @@ void loop()
   if(state_counter == 0)
   {
     // LCD display
-    lcd_display (temperature, humidity);
+    lcd_display (temperature_C, humidity);
 
     // Function is called to determine the current states
     // Uses water_level and temperature variables as parameters
 
     // Only one of these functions is going to get called
-    idle_state(water_level, temperature);
-    error_state(water_level, temperature);
-    running_state(water_level, temperature);
+    idle_state(water_level, temperature_C);
+    error_state(water_level, temperature_C);
+    running_state(water_level, temperature_C);
 
     }
   else
@@ -273,7 +280,7 @@ void loop()
 void idle_state (int water_level, float temperature)
 {
   // ===IDLE State===
-  if(water_level > w_threshold && temperature < t_threshold)
+  if(water_level > w_threshold && temperature_C < t_threshold)
   {
 
     // Time Stamp
@@ -298,7 +305,7 @@ void idle_state (int water_level, float temperature)
 
   // If statement if the water level is under the threshold (low)
   //Temperature doesn't matter
-void error_state (int water_level, float temperature)
+void error_state (int water_level, float temperature_C)
 {
   // ===ERROR State===
   if(water_level <= w_threshold)
@@ -319,10 +326,10 @@ void error_state (int water_level, float temperature)
 
   // If the water level is above the w_threshold
   // Temperature is above the t_threshold
-void running_state (int water_level, float temperature)
+void running_state (int water_level, float temperature_C)
 {
   // ===RUNNING State===
-  if(water_level > w_threshold && temperature > t_threshold)
+  if(water_level > w_threshold && temperature_C > t_threshold)
   {
     // Time Stamp
 
@@ -352,14 +359,14 @@ void disabled_mode ()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LCD Display Function
 
-unsigned float lcd_display (float temperature, float humidity)
+unsigned float lcd_display (float temperature_C, float humidity)
 {
   // CLears Display
   lcd.clear();
   // Abbreviated to display temperature on one line
   lcd.print("Temp: ");
   // Displays Temperature Value from DHT function
-  lcd.print(temperature);
+  lcd.print(temperature_C);
   // Prints degree symbol
   lcd.print((char)223);
   // prints "C" for Celsius
