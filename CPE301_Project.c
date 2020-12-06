@@ -89,7 +89,7 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 
 // Global Variables
 // Water level hreshold
-#define w_threshold 200
+#define w_threshold 150
 // Temperature threshold
 #define t_threshold 25
 
@@ -239,6 +239,7 @@ void loop()
   
   // water level = adc_reading, channel 0
  unsigned int water_level = adc_read(0);
+ Serial.println(water_level);
   //OR
  
 
@@ -292,7 +293,7 @@ lcd.print(":");
 */
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
   //Serial.print(state_counter);
-  Serial.println(*myPIN_K & 0x40);
+  //Serial.println(*myPIN_K & 0x40);
   if (!(*myPIN_K & 0x40))
   {
     // A loop that does nothing to make sure noise is not included
@@ -324,7 +325,7 @@ lcd.print(":");
   }
   else
   {
-      Serial.println("enabled");
+      //Serial.println("enabled");
       // LCD display
       lcd_display (temperature_C, humidity);
 
