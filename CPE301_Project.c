@@ -1,11 +1,13 @@
+#include <Adafruit_Sensor.h>
+
 
 // Libraries
 #include <Arduino.h>
 #include <Wire.h>
 //Elegoo
-//#include <dht_nonblocking.h>
+#include <dht11.h>
 #include <LiquidCrystal.h>
-#include <Adafruit_Sensor.h>
+//#include <Adafruit_Sensor.h>
 #include <DS3231.h>
 #include <Servo.h>
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,27 +94,34 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // Temperature threshold
 #define t_threshold 25
 
+#define DHT11PIN 4
+dht11 DHT11;
+/* Uncomment according to your sensortype. */
+#define DHT_SENSOR_TYPE DHT_TYPE_11
+//#define DHT_SENSOR_TYPE DHT_TYPE_21
+//#define DHT_SENSOR_TYPE DHT_TYPE_22
+
+static const int DHT_SENSOR_PIN = 2;
+
+
 // DHT Related Variables
 // ANALOG PINS:
 // A0, PF0: Water sensor
 // A1, PF1: Temperature and Humidity Sensor
 
 // Analog Pin sensor is connected to A1
-#define DHT_APIN A1
-#define DHTTYPE DHT11
-DHT dht(DHTPIN, DHTTYPE);
 
 //Motor Related Variables
 // motor pin: PIN2, PE4
 unsigned int motor_speed = 50;
 
 // Initialize both temperature and humidity variables
-unsigned float temperature_F = 0;
-unsigned float temperature_C = 0;
-unsigned float humidity = 0;
+float temperature_F = 0;
+float temperature_C = 0;
+float humidity = 0;
 
 // Initialize Clock DS3231
-  clock.begin();
+ // clock.begin();
 
 // State Check Variables
 // Whenever the counter is:
@@ -132,6 +141,23 @@ unsigned int state_counter = 0;
 LiquidCrystal lcd(8,7,6,5,4,3);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void idle_state(int water_level, float temperature);
+
+void error_state(int water_level, float temperature_C);
+
+void running_state(int water_level, float temperature_C);
+
+void disabled_mode();
+
+float lcd_display (float temperature_C, float humidity);
+
+float f_to_c (float temperature);
+
+void adc_init();
+
+unsigned int adc_read(unsigned char adc_channel_num);
+
+
 
 void setup()
 {
@@ -172,7 +198,7 @@ void setup()
 
   // Clock
   // Set sketch compiling time
-  clock.setDateTime(__DATE__, __TIME__);
+  //clock.setDateTime(__DATE__, __TIME__);
 }
 
 /*
@@ -217,14 +243,15 @@ void loop()
 
   // prints water level
   Serial.println(water_level);
-
+  
+  
   // Thermometer/Temperature & Humidity Sensor Reading
-  temperature_F = dht.readTemperature(true);
+  temperature_F = (float)DHT11.temperature;
 
   //change the temperature from Fahrenheit to Celcius
-  temperature_C = f_to_c(temperature_F)
+  temperature_C = f_to_c(temperature_F);
 
-  humidity = dht.readhumidty();
+  humidity = (float)DHT11.humidity;
 
   //function to display on LCD
   lcd_display(temperature_C, humidity);
@@ -288,6 +315,7 @@ lcd.print(":");
   // If the system is DISABLED or OFF ******
   if(state_counter == 1)
   {
+    
       // Function makes the system DISABLED mode
       disabled_mode();
   }
@@ -304,6 +332,7 @@ lcd.print(":");
       error_state(water_level, temperature_C);
       running_state(water_level, temperature_C);
   }
+}
 
 //***********************\\FUNCTIONS//********************************
 
@@ -399,7 +428,7 @@ void disabled_mode ()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LCD Display Function
 
-unsigned float lcd_display (float temperature_C, float humidity)
+/*float lcd_display (float temperature_C, float humidity)
 {
   // CLears Display
   lcd.clear();
@@ -417,7 +446,7 @@ unsigned float lcd_display (float temperature_C, float humidity)
   // Displays Humidity Value from DHT function
   lcd.print(humidity);
   lcd.print("%");
-
+*/
   /*
 
   Displays
@@ -432,7 +461,7 @@ unsigned float lcd_display (float temperature_C, float humidity)
 // Convert Temperature from Fahrenheit to Celcius
 //******
 
-unsigned float f_to_c (float temperature)
+float f_to_c (float temperature)
 {
     return (temperature - 32) * (5 / 9);
 }
@@ -539,6 +568,7 @@ void adc_init()
 
   //return the result in the ADC data register
   return *my_ADC_DATA;
+}
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -568,12 +598,10 @@ void loop()
 // Temperature & Humidity Sample code
 
 /*
-#include <dht.h>
-
-
 #define dht_apin A0 // Analog Pin sensor is connected to
 
 dht DHT;
+
 
 void setup(){
 
@@ -602,6 +630,7 @@ void loop(){
 
 }// end loop(
 */
+
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
