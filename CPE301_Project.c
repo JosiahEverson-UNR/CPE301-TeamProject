@@ -177,9 +177,9 @@ void setup()
 
   //PORT H
   // & 1011 1111 (0xBF) makes pin 7 as an input
-  *myDDR_H &= 0xBF;
+  *myDDR_H &= 0x00;
   // | 0100 0000 (0x40) enables internal pull-up resistor
-  *myPORT_H |= 0x40;
+  *myPORT_H |= 0x20;
 
   //PORT F *****
   // & 1111 1111 (0xFF) makes all bits to output
@@ -292,7 +292,7 @@ lcd.print(":");
 
 */
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
-  if (!(*myPIN_H & 0x40))
+  if (!(*myPIN_H & 0x20))
   {
     // A loop that does nothing to make sure noise is not included
     // (which occurs at a micro second)
@@ -310,6 +310,7 @@ lcd.print(":");
       while (!(*myPIN_H & 0x40));
     }
   }
+  
 
   //????? put out the button and counter out the state counter if statement
   // If the system is DISABLED or OFF ******
@@ -359,15 +360,15 @@ void idle_state (int water_level)
     // Time Stamp
 
     // GREEN LED ON (1000 0000)
-    //*myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x80;               //to turn on GREEN LED
+    *myPORT_B |=  0xFF;               //to turn them all off
+    *myPORT_B &=  0x7F;               //to turn on GREEN LED
 
 
     // ===RUNNING State===
 
     // BLUE LED ON (0001 0000)
-    *myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x10;               //to turn on BLUE LED
+    //*myPORT_B &=  0x00;               //to turn them all off
+    //*myPORT_B |=  0x10;               //to turn on BLUE LED
 
     // motor is OFF *****
     // [INSERT CODE]
@@ -387,9 +388,8 @@ void error_state (int water_level)
   {
 
     // RED LED ON (0010 0000)
-    Serial.println("ERRRROOROROROROROORORORORO");
-    *myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x10;               //to turn on RED LED
+     *myPORT_B |=  0xFF;               //to turn them all off
+     *myPORT_B &=  0xDF;               //to turn on RED LED
 
     // Error Message
     Serial.println("Water level is too LOW");
@@ -414,9 +414,9 @@ void running_state (int water_level)
     // Time Stamp
 
     // BLUE LED ON (0001 0000)
-    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0xFF;               //to turn them all off
     Serial.println("running");
-    *myPORT_B |=  0x10;               //to turn on BLUE LED
+    *myPORT_B &=  0xBF;               //to turn on BLUE LED
 
     // motor is on *****
     // [INSERT CODE]
@@ -434,8 +434,8 @@ void disabled_mode ()
 
   //Yellow LED on
   Serial.println("disabled");
-  *myPORT_B &=  0x00;               //to turn them all off
-  *myPORT_B |=  0x20;               //to turn on Yellow LED
+  *myPORT_B |=  0xFF;               //to turn them all off
+  *myPORT_B &=  0xEF;               //to turn on Yellow LED
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
