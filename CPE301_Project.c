@@ -289,7 +289,7 @@ lcd.print(":");
 
   //????? put out the button and counter out the state counter if statement
   // If the system is DISABLED or OFF ******
-  if(state_counter == 1)
+  if(state_counter == 0)
   {
 
       // Function makes the system DISABLED mode
@@ -404,7 +404,7 @@ void disabled_mode ()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // LCD Display Function
 
-/*float lcd_display (float temperature_C, float humidity)
+float lcd_display (float temperature_C, float humidity)
 {
   // CLears Display
   lcd.clear();
@@ -422,13 +422,14 @@ void disabled_mode ()
   // Displays Humidity Value from DHT function
   lcd.print(humidity);
   lcd.print("%");
-*/
+
   /*
   Displays
   Temp: [temperature]oC
   Humidity: [humidity]%
-  */
+ */
 }
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Convert Temperature from Fahrenheit to Celcius
