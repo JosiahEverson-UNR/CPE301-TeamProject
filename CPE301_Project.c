@@ -177,7 +177,7 @@ WORK BUCKET:
 
     // X means it's done
 
-1. [] Whether to separate every state into different functions
+1. [X] Whether to separate every state into different functions
    so that lcd can be displayed to each IDLE STATE.
 
    lcd_display (temperature, humidity);
@@ -196,7 +196,7 @@ WORK BUCKET:
 
 8. [] Project Report
 
-9. [] Convert Temperature to Celcius
+9. [X] Convert Temperature to Celcius
       function: line 393
       call: line 218
 
@@ -218,7 +218,7 @@ void loop()
   temperature_F = dht.readTemperature(true);
 
   //change the temperature from Fahrenheit to Celcius
-  //temperature_C = f_to_c(temperature_F)
+  temperature_C = f_to_c(temperature_F)
 
   humidity = dht.readhumidty();
 
@@ -397,7 +397,7 @@ unsigned float lcd_display (float temperature_C, float humidity)
 
 unsigned float f_to_c (float temperature)
 {
-
+    return (temperature - 32) * (5 / 9);
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
