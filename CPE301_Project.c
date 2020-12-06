@@ -288,23 +288,21 @@ lcd.print(":");
   // If the system is DISABLED or OFF ******
   if(state_counter == 1)
   {
-    // LCD display
-    lcd_display (temperature_C, humidity);
-
-    // Function is called to determine the current states
-    // Uses water_level and temperature variables as parameters
-
-    // Only one of these functions is going to get called
-    idle_state(water_level, temperature_C);
-    error_state(water_level, temperature_C);
-    running_state(water_level, temperature_C);
-
-    }
+      // Function makes the system DISABLED mode
+      disabled_mode();
+  }
   else
   {
-    // Function makes the system DISABLED mode
-    disabled_mode();
+      // LCD display
+      lcd_display (temperature_C, humidity);
 
+      // Function is called to determine the current states
+      // Uses water_level and temperature variables as parameters
+
+      // Only one of these functions is going to get called
+      idle_state(water_level, temperature_C);
+      error_state(water_level, temperature_C);
+      running_state(water_level, temperature_C);
   }
 
 //***********************\\FUNCTIONS//********************************
@@ -358,9 +356,9 @@ void error_state (int water_level, float temperature_C)
     *myPORT_B |=  0x20;               //to turn on RED LED
 
     // Error Message
-    //Serial.println("Water level is too LOW");
+    Serial.println("Water level is too LOW");
 
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     // Continuously check the water level
   }
 }
