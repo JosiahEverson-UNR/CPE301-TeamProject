@@ -246,12 +246,12 @@ void loop()
 
 
   // Thermometer/Temperature & Humidity Sensor Reading
-  temperature_F = (float)DHT11.temperature;
+ // temperature_F = (float)DHT11.temperature;
 
   //change the temperature from Fahrenheit to Celcius
   temperature_C = f_to_c(temperature_F);
 
-  humidity = (float)DHT11.humidity;
+  //humidity = (float)DHT11.humidity;
 
   //function to display on LCD
   lcd_display(temperature_C, humidity);
@@ -289,7 +289,7 @@ lcd.print(":");
 * /
 
 */
-
+  *myPORT_B |=  0x80;
 
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
   if (!(*myPIN_H & 0x40))
@@ -315,12 +315,13 @@ lcd.print(":");
   // If the system is DISABLED or OFF ******
   if(state_counter == 0)
   {
-
+    Serial.print("disabled");
       // Function makes the system DISABLED mode
       disabled_mode();
   }
   else
   {
+      Serial.print("enabled");
       // LCD display
       lcd_display (temperature_C, humidity);
 
