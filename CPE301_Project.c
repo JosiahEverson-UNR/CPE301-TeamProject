@@ -15,23 +15,18 @@
 /*
 [Switch]
   ENABLED Mode (ON) = When the system is currently simulating CODE
-
   DISABLED Mode (OFF) = When the system is not monitoring temperature and water level.
                   Also, the fan motor is OFF.
-
 [Conditions]
   RUNNING State = The water_level is above the w_threshold AND the temperature is
                   ABOVE the t_threshold so the fan is turned ON.
                   {It's hot enough so one turns on the fan to cool themself}
-
   ERROR State = The water_level is LOW so the fan is turned OFF. The temperature doesn't
                 matter. {If the water is seen as power and it runs low, the motor won't be
                 able to function}
-
   IDLE State = This is when water level is above the threshold while temperature
                      is lower than the t_threshold so the fan motor is turned off.
                      {It's cool enough that one doesn't need the fan anymore.}
-
 */
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,32 +199,20 @@ void setup()
 /*
 WORK BUCKET:
     //***** NEEDS CODE
-
     // X means it's done
-
 1. [X] Whether to separate every state into different functions
    so that lcd can be displayed to each IDLE STATE.
-
    lcd_display (temperature, humidity);
-
 2. [] Integrate motor into code.
-
 3. [X] Temperature reading
-
 4. [X] Humidity reading
-
 5. [] Vent angle
-
 6. [X] Add Timer to record time whenever the system changes state.
-
 7. [] Physically build the circuit
-
 8. [] Project Report
-
 9. [X] Convert Temperature to Celcius
       function: line 393
       call: line 218
-
 */
 
 void loop()
@@ -243,8 +226,8 @@ void loop()
 
   // prints water level
   Serial.println(water_level);
-  
-  
+
+
   // Thermometer/Temperature & Humidity Sensor Reading
   temperature_F = (float)DHT11.temperature;
 
@@ -258,9 +241,7 @@ void loop()
 
 /* Clock Sample CODE
 dt = clock.getDateTime();
-
  // For leading zero look to DS3231_dateformat example
-
  Serial.print("Raw data: ");
  Serial.print(dt.year);   Serial.print("-");
  Serial.print(dt.month);  Serial.print("-");
@@ -268,7 +249,6 @@ dt = clock.getDateTime();
  Serial.print(dt.hour);   Serial.print(":");
  Serial.print(dt.minute); Serial.print(":");
  Serial.print(dt.second); Serial.println("");
-
 Testing Area for clock
 lcd.clear();
 // Abbreviated to display temperature on one line
@@ -280,14 +260,10 @@ lcd.setCursor(0,1);
 lcd.print("Time: ");
 lcd.print("dt.hour");
 lcd.print(":");
-
 /* Dislplays
-
   Date: [month]/[day]
   Time: [hour]:[minute]
-
 * /
-
 */
 
 
@@ -315,7 +291,7 @@ lcd.print(":");
   // If the system is DISABLED or OFF ******
   if(state_counter == 1)
   {
-    
+
       // Function makes the system DISABLED mode
       disabled_mode();
   }
@@ -448,12 +424,9 @@ void disabled_mode ()
   lcd.print("%");
 */
   /*
-
   Displays
-
   Temp: [temperature]oC
   Humidity: [humidity]%
-
   */
 }
 
@@ -590,8 +563,6 @@ void loop()
   tempK = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * tempK * tempK )) * tempK );       //  Temp Kelvin
   float tempC = tempK - 273.15;            // Convert Kelvin to Celcius
   float tempF = (tempC * 9.0)/ 5.0 + 32.0; // Convert Celcius to Fahrenheit
-
-
 */
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -599,35 +570,24 @@ void loop()
 
 /*
 #define dht_apin A0 // Analog Pin sensor is connected to
-
 dht DHT;
-
-
 void setup(){
-
   Serial.begin(9600);
   delay(500);//Delay to let system boot
   Serial.println("DHT11 Humidity & temperature Sensor\n\n");
   delay(1000);//Wait before accessing Sensor
-
 }//end "setup()"
-
 void loop(){
   //Start of Program
-
     DHT.read11(dht_apin);
-
     Serial.print("Current humidity = ");
     Serial.print(DHT.humidity);
     Serial.print("%  ");
     Serial.print("temperature = ");
     Serial.print(DHT.temperature);
     Serial.println("C  ");
-
     delay(5000);//Wait 5 seconds before accessing sensor again.
-
   //Fastest should be once every two seconds.
-
 }// end loop(
 */
 
@@ -636,15 +596,12 @@ void loop(){
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*
 // ===IDLE State===
-
 // GREEN LED ON (1000 0000)
 //*myPORT_B &=  0x00;               //to turn them all off
 //*myPORT_B |=  0x80;               //to turn on GREEN LED
 // Time stamps
 //*****
-
 // Monitor water level
-
 //~~~~~~~~~~~~~~~~setup timer register FUNCTION~~~~~~~~~~~~~~~~~~~
 void setup_timer_regs()
 {
@@ -653,14 +610,11 @@ void setup_timer_regs()
   *myTCCR1A &= 0x00;
   *myTCCR1B &= 0x00;
   *myTCCR1C &= 0x00;
-
   // Reset the TOV Flag:       0000 0000 | 0000 0001 = 0000 000{1}
   *myTIFR1 |= 0x01;
   // Enable the TOV Interrupt: 0000 0000 | 0000 0001 = 0000 000{1}
   *myTIMSK1 |= 0x01;
 }
-
-
 //~~~~~~~~~~~~~~~~~~TIMER OVERFLOW ISR~~~~~~~~~~~~~~~~~~~
 // Gets called once the Flag is Set
 ISR(TIMER1_OVF_vect)
@@ -671,7 +625,6 @@ ISR(TIMER1_OVF_vect)
    *myTCNT1 |= 65536 - char_tick;
    // Start the Timer: 0000 0000 | 0000 0001 = 0000 000{1}
    *myTCCR1B |= 0x01;
-
   // if it's not the STOP amount
   if (char_tick != 65535)
   {
@@ -681,7 +634,6 @@ ISR(TIMER1_OVF_vect)
     *port_B ^= 0x40;
   }
 }
-
 */
 
 /*
@@ -692,7 +644,6 @@ Ignore these:
       //1 % 16 = 1, 2 % 16 = 2, ... , 16 % 16 = 0
       //to reset the counter to zero after the value becomes 16 (16 % 16 = 0)
       counter %= 16;
-
       //prints counter to the serial monitor
       Serial.println(counter);
 */
