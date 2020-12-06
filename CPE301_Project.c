@@ -42,6 +42,11 @@ volatile unsigned char* myPORT_B = (unsigned char*) 0x25;
 volatile unsigned char* myDDR_B  = (unsigned char*) 0x24;
 volatile unsigned char* myPIN_B  = (unsigned char*) 0x23;
 
+//PORT C DECLARATION: 
+volatile unsigned char* myPORT_C = (unsigned char*) 0x28;
+volatile unsigned char* myDDR_C  = (unsigned char*) 0x27;
+volatile unsigned char* myPIN_C  = (unsigned char*) 0x26;
+
 //PORT H DECLARATION: Used as an input for push button
 volatile unsigned char* myPORT_H = (unsigned char*) 0x102;
 volatile unsigned char* myDDR_H  = (unsigned char*) 0x101;
@@ -91,16 +96,14 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // Water level hreshold
 #define w_threshold 150
 // Temperature threshold
-#define t_threshold 25
+#define t_threshold 18
 
-#define DHT11PIN 4
+#define DHT11PIN 36
 dht11 DHT11;
 /* Uncomment according to your sensortype. */
-#define DHT_SENSOR_TYPE DHT_TYPE_11
+//#define DHT_SENSOR_TYPE DHT_TYPE_11
 //#define DHT_SENSOR_TYPE DHT_TYPE_21
 //#define DHT_SENSOR_TYPE DHT_TYPE_22
-
-static const int DHT_SENSOR_PIN = 2;
 
 
 // DHT Related Variables
@@ -115,8 +118,7 @@ static const int DHT_SENSOR_PIN = 2;
 //@@@@@@ unsigned int motor_speed = 50;
 
 // Initialize both temperature and humidity variables
-float temperature_F = 0;
-float temperature_C = 0;
+float temperature = 0;
 float humidity = 0;
 
 // Initialize Clock DS3231
@@ -239,21 +241,22 @@ void loop()
 
   // water level = adc_reading, channel 0
  unsigned int water_level = adc_read(0);
- Serial.println(water_level);
+ //Serial.println(water_level);
   //OR
 
 
   // prints water level
   //Serial.println(water_level);
-
-
+  int chk = DHT11.read(DHT11PIN);
   // Thermometer/Temperature & Humidity Sensor Reading
-  temperature_F = (float)DHT11.temperature;
+  temperature = (float)DHT11.temperature;
+  Serial.println(temperature);
 
   //change the temperature from Fahrenheit to Celcius
-  temperature_C = f_to_c(temperature_F);
+ 
 
   humidity = (float)DHT11.humidity;
+  //Serial.println(humidity);
 
   //function to display on LCD
   //lcd_display(temperature_C, humidity);
@@ -327,7 +330,7 @@ lcd.print(":");
   {
       //Serial.println("enabled");
       // LCD display
-      lcd_display (temperature_C, humidity);
+      lcd_display (temperature, humidity);
 
       // Function is called to determine the current states
       // Uses water_level and temperature variables as parameters
@@ -335,9 +338,9 @@ lcd.print(":");
       // Only one of these functions is going to get called
 
       //@@@@@ , temperature_C)
-      idle_state(water_level, temperature_C);
-      error_state(water_level, temperature_C);
-      running_state(water_level, temperature_C);
+      idle_state(water_level, temperature);
+      error_state(water_level, temperature);
+      running_state(water_level, temperature);
   }
 }
 
@@ -358,8 +361,8 @@ void idle_state (int water_level, float temperature)
 {
   // ===IDLE State===
   //@@@@@  && temperature_C < t_threshold
-  Serial.println("IDLLLLLLEEEEE");
-  if(water_level > w_threshold && temperature_C < t_threshold)
+  //Serial.println("IDLLLLLLEEEEE");
+  if(water_level > w_threshold && temperature < t_threshold)
   {
     // Time Stamp
 
@@ -406,7 +409,7 @@ void running_state (int water_level, float temperature)
   // ===RUNNING State===
 
   //@@@@@  && temperature_C > t_threshold
-  if(water_level > w_threshold && temperature_C > t_threshold)
+  if(water_level > w_threshold && temperature > t_threshold)
   {
     // Time Stamp
 
