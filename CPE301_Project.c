@@ -94,14 +94,14 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // Temperature threshold
 #define t_threshold 25
 
-#define DHT11PIN 4
-dht11 DHT11;
+//@@@@@@ #define DHT11PIN 4
+//@@@@@@ dht11 DHT11;
 /* Uncomment according to your sensortype. */
-#define DHT_SENSOR_TYPE DHT_TYPE_11
+//@@@@@@ #define DHT_SENSOR_TYPE DHT_TYPE_11
 //#define DHT_SENSOR_TYPE DHT_TYPE_21
 //#define DHT_SENSOR_TYPE DHT_TYPE_22
 
-static const int DHT_SENSOR_PIN = 2;
+//@@@@@@ static const int DHT_SENSOR_PIN = 2;
 
 
 // DHT Related Variables
@@ -113,7 +113,7 @@ static const int DHT_SENSOR_PIN = 2;
 
 //Motor Related Variables
 // motor pin: PIN2, PE4
-unsigned int motor_speed = 50;
+//@@@@@@ unsigned int motor_speed = 50;
 
 // Initialize both temperature and humidity variables
 float temperature_F = 0;
@@ -243,8 +243,8 @@ void loop()
 
   // prints water level
   Serial.println(water_level);
-  
-  
+
+
   // Thermometer/Temperature & Humidity Sensor Reading
   temperature_F = (float)DHT11.temperature;
 
@@ -315,7 +315,7 @@ lcd.print(":");
   // If the system is DISABLED or OFF ******
   if(state_counter == 0)
   {
-    
+
       // Function makes the system DISABLED mode
       disabled_mode();
   }
@@ -328,9 +328,11 @@ lcd.print(":");
       // Uses water_level and temperature variables as parameters
 
       // Only one of these functions is going to get called
-      idle_state(water_level, temperature_C);
-      error_state(water_level, temperature_C);
-      running_state(water_level, temperature_C);
+
+      //@@@@@ , temperature_C)
+      idle_state(water_level);
+      error_state(water_level);
+      running_state(water_level);
   }
 }
 
@@ -346,10 +348,12 @@ lcd.print(":");
 // PB4 - BLUE (RUNNING) LED
 // PH6 - Push Button
 
-void idle_state (int water_level, float temperature)
+//@@@@@ , float temperature
+void idle_state (int water_level)
 {
   // ===IDLE State===
-  if(water_level > w_threshold && temperature_C < t_threshold)
+  //@@@@@  && temperature_C < t_threshold
+  if(water_level > w_threshold)
   {
 
     // Time Stamp
@@ -374,7 +378,9 @@ void idle_state (int water_level, float temperature)
 
   // If statement if the water level is under the threshold (low)
   //Temperature doesn't matter
-void error_state (int water_level, float temperature_C)
+
+  //@@@@@ , float temperature
+void error_state (int water_level)
 {
   // ===ERROR State===
   if(water_level <= w_threshold)
@@ -395,10 +401,14 @@ void error_state (int water_level, float temperature_C)
 
   // If the water level is above the w_threshold
   // Temperature is above the t_threshold
-void running_state (int water_level, float temperature_C)
+
+  //@@@@@ , float temperature
+void running_state (int water_level)
 {
   // ===RUNNING State===
-  if(water_level > w_threshold && temperature_C > t_threshold)
+
+  //@@@@@  && temperature_C > t_threshold
+  if(water_level > w_threshold)
   {
     // Time Stamp
 
@@ -454,7 +464,7 @@ float lcd_display (float temperature_C, float humidity)
   Temp: [temperature]oC
   Humidity: [humidity]%
 
- */ 
+ */
 }
 
 
