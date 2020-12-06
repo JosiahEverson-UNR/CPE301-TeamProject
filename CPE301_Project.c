@@ -93,14 +93,14 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // Temperature threshold
 #define t_threshold 25
 
-//@@@@@@ #define DHT11PIN 4
-//@@@@@@ dht11 DHT11;
+#define DHT11PIN 4
+dht11 DHT11;
 /* Uncomment according to your sensortype. */
-//@@@@@@ #define DHT_SENSOR_TYPE DHT_TYPE_11
+#define DHT_SENSOR_TYPE DHT_TYPE_11
 //#define DHT_SENSOR_TYPE DHT_TYPE_21
 //#define DHT_SENSOR_TYPE DHT_TYPE_22
 
-//@@@@@@ static const int DHT_SENSOR_PIN = 2;
+static const int DHT_SENSOR_PIN = 2;
 
 
 // DHT Related Variables
@@ -140,7 +140,7 @@ unsigned int state_counter = 0;
 LiquidCrystal lcd(8,7,6,5,4,3);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void idle_state(int water_level, float temperature);
+void idle_state(int water_level, float temperature_C);
 
 void error_state(int water_level, float temperature_C);
 
@@ -172,7 +172,7 @@ void setup()
   // | 1111 0000 enables internal pull-up resistor
  //*myPORT_B |= 0xF0;
 
-  
+
 
   //PORT H
   // Turn all pins to inputs
@@ -236,24 +236,24 @@ WORK BUCKET:
 void loop()
 {
   // Water Sensor: PF0 or A0
-  
+
   // water level = adc_reading, channel 0
  unsigned int water_level = adc_read(0);
  Serial.println(water_level);
   //OR
- 
+
 
   // prints water level
   //Serial.println(water_level);
 
 
   // Thermometer/Temperature & Humidity Sensor Reading
- // temperature_F = (float)DHT11.temperature;
+  temperature_F = (float)DHT11.temperature;
 
   //change the temperature from Fahrenheit to Celcius
- // temperature_C = f_to_c(temperature_F);
+  temperature_C = f_to_c(temperature_F);
 
-  //humidity = (float)DHT11.humidity;
+  humidity = (float)DHT11.humidity;
 
   //function to display on LCD
   //lcd_display(temperature_C, humidity);
@@ -310,11 +310,11 @@ lcd.print(":");
 
       // Makes sure that counter increments by one per pressed button
       while (!(*myPIN_H & 0x40));
-     
+
     }
   }
-  
-  
+
+
 
   //????? put out the button and counter out the state counter if statement
   // If the system is DISABLED or OFF ******
@@ -335,9 +335,9 @@ lcd.print(":");
       // Only one of these functions is going to get called
 
       //@@@@@ , temperature_C)
-      //idle_state(water_level);
-      error_state(water_level);
-      running_state(water_level);
+      idle_state(water_level, temperature_C);
+      error_state(water_level, temperature_C);
+      running_state(water_level, temperature_C);
   }
 }
 
@@ -354,12 +354,12 @@ lcd.print(":");
 // PH6 - Push Button
 
 //@@@@@ , float temperature
-void idle_state (int water_level)
+void idle_state (int water_level, float temperature)
 {
   // ===IDLE State===
   //@@@@@  && temperature_C < t_threshold
   Serial.println("IDLLLLLLEEEEE");
-  if(water_level > w_threshold)
+  if(water_level > w_threshold && temperature_C < t_threshold)
   {
     // Time Stamp
 
@@ -378,7 +378,7 @@ void idle_state (int water_level)
   //Temperature doesn't matter
 
   //@@@@@ , float temperature
-void error_state (int water_level)
+void error_state (int water_level, float temperature)
 {
   // ===ERROR State===
   if(water_level <= w_threshold)
@@ -401,12 +401,12 @@ void error_state (int water_level)
   // Temperature is above the t_threshold
 
   //@@@@@ , float temperature
-void running_state (int water_level)
+void running_state (int water_level, float temperature)
 {
   // ===RUNNING State===
 
   //@@@@@  && temperature_C > t_threshold
-  if(water_level > w_threshold)
+  if(water_level > w_threshold && temperature_C > t_threshold)
   {
     // Time Stamp
 
