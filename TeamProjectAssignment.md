@@ -20,10 +20,6 @@
     - All source code.
     - Reasonable and helpful commit comments.
     - Evidence of contributions from all team members.
-- Video of the System
-    - Show system in operation.
-    - Some narration explaining the operation.
-    - Possible subdued background music.
 #### Project Requirements
 - Monitor the water levels in a reservoir.
     - Print an alert when the water level is too low.
