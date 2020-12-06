@@ -111,6 +111,9 @@ unsigned float temperature_F = 0;
 unsigned float temperature_C = 0;
 unsigned float humidity = 0;
 
+// Initialize Clock DS3231
+  clock.begin();
+
 // State Check Variables
 // Whenever the counter is:
 // 0, the system is at DISABLED state
