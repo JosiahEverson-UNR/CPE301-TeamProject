@@ -57,12 +57,11 @@ volatile unsigned char* myPORT_E = (unsigned char*) 0x2E;
 volatile unsigned char* myDDR_E  = (unsigned char*) 0x2D;
 volatile unsigned char* myPIN_E  = (unsigned char*) 0x2C;
 
-/*
-//PORT K DECLARATION: Analog
+
+//PORT K DECLARATION: Button
 volatile unsigned char* myPORT_K = (unsigned char*) 0x108;
 volatile unsigned char* myDDR_K  = (unsigned char*) 0x107;
 volatile unsigned char* myPIN_K  = (unsigned char*) 0x106;
-*/
 
 //ADC Registers
 volatile unsigned char* my_ADMUX     = (unsigned char*) 0x7C;
@@ -168,18 +167,18 @@ void setup()
   // Set up the ddr, port registers for input and output ports
 
   //PORT B
-  // & 0000 1111 (0x0F) makes pin 7 as an input
+  // Turn all pins to output
   *myDDR_B |= 0xFF;
   // | 1111 0000 enables internal pull-up resistor
- // *myPORT_B |= 0xF0;
+ //*myPORT_B |= 0xF0;
 
   
 
   //PORT H
-  // & 1011 1111 (0xBF) makes pin 7 as an input
-  *myDDR_H &= 0x00;
+  // Turn all pins to inputs
+  *myDDR_K &= 0x00;
   // | 0100 0000 (0x40) enables internal pull-up resistor
-  *myPORT_H |= 0x20;
+  *myPORT_K |= 0xFF;
 
   //PORT F *****
   // & 1111 1111 (0xFF) makes all bits to output
@@ -239,9 +238,9 @@ void loop()
   // Water Sensor: PF0 or A0
   
   // water level = adc_reading, channel 0
-  unsigned int water_level = adc_read(0);
+ unsigned int water_level = adc_read(0);
   //OR
-  //unsigned int water_level = analogRead(A0);
+ 
 
   // prints water level
   //Serial.println(water_level);
@@ -251,12 +250,12 @@ void loop()
  // temperature_F = (float)DHT11.temperature;
 
   //change the temperature from Fahrenheit to Celcius
-  temperature_C = f_to_c(temperature_F);
+ // temperature_C = f_to_c(temperature_F);
 
   //humidity = (float)DHT11.humidity;
 
   //function to display on LCD
-  lcd_display(temperature_C, humidity);
+  //lcd_display(temperature_C, humidity);
 
 /* Clock Sample CODE
 dt = clock.getDateTime();
@@ -292,14 +291,16 @@ lcd.print(":");
 
 */
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
-  if (!(*myPIN_H & 0x20))
+  //Serial.print(state_counter);
+  Serial.println(*myPIN_K & 0x40);
+  if (!(*myPIN_K & 0x40))
   {
     // A loop that does nothing to make sure noise is not included
     // (which occurs at a micro second)
     for (volatile unsigned int i = 0; i < 1000; i++);
 
     // Checks again if the button is pressed
-    if (!(*myPIN_H & 0x40))
+    if (!(*myPIN_K & 0x40))
     {
       // It's currently at 0 then becomes 1
       state_counter++;
@@ -308,8 +309,10 @@ lcd.print(":");
 
       // Makes sure that counter increments by one per pressed button
       while (!(*myPIN_H & 0x40));
+     
     }
   }
+  
   
 
   //????? put out the button and counter out the state counter if statement
@@ -331,7 +334,7 @@ lcd.print(":");
       // Only one of these functions is going to get called
 
       //@@@@@ , temperature_C)
-      idle_state(water_level);
+      //idle_state(water_level);
       error_state(water_level);
       running_state(water_level);
   }
@@ -360,15 +363,8 @@ void idle_state (int water_level)
     // Time Stamp
 
     // GREEN LED ON (1000 0000)
-    *myPORT_B |=  0xFF;               //to turn them all off
-    *myPORT_B &=  0x7F;               //to turn on GREEN LED
-
-
-    // ===RUNNING State===
-
-    // BLUE LED ON (0001 0000)
-    //*myPORT_B &=  0x00;               //to turn them all off
-    //*myPORT_B |=  0x10;               //to turn on BLUE LED
+    *myPORT_B &=  0x00;               //to turn them all off
+    *myPORT_B |=  0x80;               //to turn on GREEN LED
 
     // motor is OFF *****
     // [INSERT CODE]
@@ -388,8 +384,8 @@ void error_state (int water_level)
   {
 
     // RED LED ON (0010 0000)
-     *myPORT_B |=  0xFF;               //to turn them all off
-     *myPORT_B &=  0xDF;               //to turn on RED LED
+     *myPORT_B &=  0x00;               //to turn them all off
+     *myPORT_B |=  0x20;               //to turn on RED LED
 
     // Error Message
     Serial.println("Water level is too LOW");
@@ -414,9 +410,9 @@ void running_state (int water_level)
     // Time Stamp
 
     // BLUE LED ON (0001 0000)
-    *myPORT_B |=  0xFF;               //to turn them all off
+    *myPORT_B &=  0x00;               //to turn them all off
     Serial.println("running");
-    *myPORT_B &=  0xBF;               //to turn on BLUE LED
+    *myPORT_B |=  0x40;               //to turn on BLUE LED
 
     // motor is on *****
     // [INSERT CODE]
@@ -434,8 +430,8 @@ void disabled_mode ()
 
   //Yellow LED on
   Serial.println("disabled");
-  *myPORT_B |=  0xFF;               //to turn them all off
-  *myPORT_B &=  0xEF;               //to turn on Yellow LED
+  *myPORT_B &=  0x00;               //to turn them all off
+  *myPORT_B |=  0x10;               //to turn on Yellow LED
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
