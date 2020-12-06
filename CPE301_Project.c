@@ -169,6 +169,10 @@ void setup()
   lcd.begin(16,2);
   // Set so that LCD display start on upper-left corner
   lcd.setCursor(0,0);
+
+  // Clock
+  // Set sketch compiling time
+  clock.setDateTime(__DATE__, __TIME__);
 }
 
 /*
@@ -225,6 +229,22 @@ void loop()
   //function to display on LCD
   lcd_display(temperature_C, humidity);
 
+/* Clock Sample CODE
+dt = clock.getDateTime();
+
+ // For leading zero look to DS3231_dateformat example
+
+ Serial.print("Raw data: ");
+ Serial.print(dt.year);   Serial.print("-");
+ Serial.print(dt.month);  Serial.print("-");
+ Serial.print(dt.day);    Serial.print(" ");
+ Serial.print(dt.hour);   Serial.print(":");
+ Serial.print(dt.minute); Serial.print(":");
+ Serial.print(dt.second); Serial.println("");
+
+*/
+
+
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
   if (!(*myPIN_H & 0x40))
   {
@@ -247,7 +267,7 @@ void loop()
 
   //????? put out the button and counter out the state counter if statement
   // If the system is DISABLED or OFF ******
-  if(state_counter == 0)
+  if(state_counter == 1)
   {
       // Function makes the system DISABLED mode
       disabled_mode();
