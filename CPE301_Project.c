@@ -242,6 +242,25 @@ dt = clock.getDateTime();
  Serial.print(dt.minute); Serial.print(":");
  Serial.print(dt.second); Serial.println("");
 
+Testing Area for clock
+lcd.clear();
+// Abbreviated to display temperature on one line
+lcd.print("Date: ");
+lcd.print("dt.month");
+lcd.print("/");
+lcd.print("dt.day");
+lcd.setCursor(0,1);
+lcd.print("Time: ");
+lcd.print("dt.hour");
+lcd.print(":");
+
+/* Dislplays
+
+  Date: [month]/[day]
+  Time: [hour]:[minute]
+
+* /
+
 */
 
 
