@@ -169,9 +169,11 @@ void setup()
 
   //PORT B
   // & 0000 1111 (0x0F) makes pin 7 as an input
-  *myDDR_B &= 0x0F;
+  *myDDR_B |= 0xFF;
   // | 1111 0000 enables internal pull-up resistor
-  *myPORT_B |= 0xF0;
+ // *myPORT_B |= 0xF0;
+
+  
 
   //PORT H
   // & 1011 1111 (0xBF) makes pin 7 as an input
@@ -235,14 +237,14 @@ WORK BUCKET:
 void loop()
 {
   // Water Sensor: PF0 or A0
-
+  
   // water level = adc_reading, channel 0
   unsigned int water_level = adc_read(0);
   //OR
   //unsigned int water_level = analogRead(A0);
 
   // prints water level
-  Serial.println(water_level);
+  //Serial.println(water_level);
 
 
   // Thermometer/Temperature & Humidity Sensor Reading
@@ -289,8 +291,6 @@ lcd.print(":");
 * /
 
 */
-  *myPORT_B |=  0x80;
-
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
   if (!(*myPIN_H & 0x40))
   {
@@ -315,13 +315,12 @@ lcd.print(":");
   // If the system is DISABLED or OFF ******
   if(state_counter == 0)
   {
-    Serial.print("disabled");
       // Function makes the system DISABLED mode
       disabled_mode();
   }
   else
   {
-      Serial.print("enabled");
+      Serial.println("enabled");
       // LCD display
       lcd_display (temperature_C, humidity);
 
@@ -354,9 +353,9 @@ void idle_state (int water_level)
 {
   // ===IDLE State===
   //@@@@@  && temperature_C < t_threshold
+  Serial.println("IDLLLLLLEEEEE");
   if(water_level > w_threshold)
   {
-
     // Time Stamp
 
     // GREEN LED ON (1000 0000)
@@ -388,8 +387,9 @@ void error_state (int water_level)
   {
 
     // RED LED ON (0010 0000)
+    Serial.println("ERRRROOROROROROROORORORORO");
     *myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x20;               //to turn on RED LED
+    *myPORT_B |=  0x10;               //to turn on RED LED
 
     // Error Message
     Serial.println("Water level is too LOW");
@@ -415,6 +415,7 @@ void running_state (int water_level)
 
     // BLUE LED ON (0001 0000)
     *myPORT_B &=  0x00;               //to turn them all off
+    Serial.println("running");
     *myPORT_B |=  0x10;               //to turn on BLUE LED
 
     // motor is on *****
@@ -432,8 +433,9 @@ void disabled_mode ()
   //not monitoring any temperature or water level
 
   //Yellow LED on
-  //*myPORT_B &=  0x00;               //to turn them all off
-  *myPORT_B |=  0x02;               //to turn on Yellow LED
+  Serial.println("disabled");
+  *myPORT_B &=  0x00;               //to turn them all off
+  *myPORT_B |=  0x20;               //to turn on Yellow LED
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
