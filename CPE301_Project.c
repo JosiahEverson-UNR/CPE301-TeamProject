@@ -174,7 +174,7 @@ WORK BUCKET:
 
     // X means it's done
 
-1. [] Whether to separate every state into different functions
+1. [X] Whether to separate every state into different functions
    so that lcd can be displayed to each IDLE STATE.
 
    lcd_display (temperature, humidity);
