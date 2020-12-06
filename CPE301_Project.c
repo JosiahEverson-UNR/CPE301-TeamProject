@@ -194,7 +194,7 @@ WORK BUCKET:
 
 5. [] Vent angle
 
-6. [] Add Timer to record time whenever the system changes state.
+6. [X] Add Timer to record time whenever the system changes state.
 
 7. [] Physically build the circuit
 
