@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 //Elegoo
-#include <dht_nonblocking.h>
+//#include <dht_nonblocking.h>
 #include <LiquidCrystal.h>
 #include <Adafruit_Sensor.h>
 #include <DS3231.h>
