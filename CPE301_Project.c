@@ -267,7 +267,7 @@ dt = clock.getDateTime();
 
   //????? put out the button and counter out the state counter if statement
   // If the system is DISABLED or OFF ******
-  if(state_counter == 0)
+  if(state_counter == 1)
   {
     // LCD display
     lcd_display (temperature_C, humidity);
