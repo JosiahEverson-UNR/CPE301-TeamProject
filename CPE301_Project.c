@@ -37,7 +37,7 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //REGISTERS
 
-//PORT B DECLARATION: Used as an input for the LEDs
+//PORT B DECLARATION: Used as Output for the LEDs
 volatile unsigned char* myPORT_B = (unsigned char*) 0x25;
 volatile unsigned char* myDDR_B  = (unsigned char*) 0x24;
 volatile unsigned char* myPIN_B  = (unsigned char*) 0x23;
@@ -63,7 +63,7 @@ volatile unsigned char* myDDR_E  = (unsigned char*) 0x2D;
 volatile unsigned char* myPIN_E  = (unsigned char*) 0x2C;
 
 
-//PORT K DECLARATION: Button
+//PORT K DECLARATION: Button and Transistor
 volatile unsigned char* myPORT_K = (unsigned char*) 0x108;
 volatile unsigned char* myDDR_K  = (unsigned char*) 0x107;
 volatile unsigned char* myPIN_K  = (unsigned char*) 0x106;
@@ -387,7 +387,8 @@ void idle_state (int water_level, float temperature)
     *myPORT_B |=  0x80;               //to turn on GREEN LED
 
     // motor is OFF *****
-    // [INSERT CODE]
+    *myPORT_B |= 0x08;        //    0000 (10)00   PB3
+    *myPORT_B &= 0xFD;        //     1111   11(0)1  PB2  //motor OFF
 
   }
 }
@@ -410,8 +411,8 @@ void error_state (int water_level, float temperature)
     // Error Message
     Serial.println("Water level is too LOW");
 
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    // Continuously check the water level
+    *myPORT_B |= 0x08;        //    0000 (10)00   PB3
+    *myPORT_B &= 0xFD;        //     1111   11(0)1  PB2  //motor OFF
   }
 }
 
@@ -435,7 +436,8 @@ void running_state (int water_level, float temperature)
     *myPORT_B |=  0x40;               //to turn on BLUE LED
 
     // motor is on *****
-    // [INSERT CODE]
+    *myPORT_B |= 0x08;        //    0000 (10)00   PB3
+    *myPORT_B |= 0x02;        //    0000 00(1)0   PB2  //motor ON
   }
 
   // If the water level is above the w_threshold
@@ -452,6 +454,9 @@ void disabled_mode ()
   Serial.println("disabled");
   *myPORT_B &=  0x00;               //to turn them all off
   *myPORT_B |=  0x10;               //to turn on Yellow LED
+
+  *myPORT_B |= 0x08;        //    0000 (10)00   PB3
+  *myPORT_B &= 0xFD;        //     1111   11(0)1  PB2  //motor OFF
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
