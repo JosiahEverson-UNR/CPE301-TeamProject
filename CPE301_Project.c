@@ -60,7 +60,6 @@ volatile unsigned char* myPORT_E = (unsigned char*) 0x2E;
 volatile unsigned char* myDDR_E  = (unsigned char*) 0x2D;
 volatile unsigned char* myPIN_E  = (unsigned char*) 0x2C;
 
-
 //PORT K DECLARATION: Used for Button and Transistor
 volatile unsigned char* myPORT_K = (unsigned char*) 0x108;
 volatile unsigned char* myDDR_K  = (unsigned char*) 0x107;
@@ -80,12 +79,6 @@ volatile unsigned char *myTIMSK1 = (unsigned char*) 0x6F;
 volatile unsigned int  *myTCNT1  = (unsigned int*)  0x84;
 volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 
-// TCCR1A: Can decide when to start/stop counting
-// TIMSK1: Reset TOV bit
-// TCNT1: Increments every clk tick (62.5 nsec). When it hits max, it flips TOV bit
-//        then resets to 0.
-// TIFR1: Contains TOV (locate which bit)
-
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Initializations OR Declarations
 
@@ -96,7 +89,7 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // Temperature threshold
 #define t_threshold 22
 
-// DHT Pin #
+// DHT
 #define DHT11PIN 36
 dht11 DHT11;
 
@@ -104,34 +97,10 @@ dht11 DHT11;
 float temperature = 0;
 float humidity = 0;
 
-// Starts at DISABLED mode
+// Start machine in DISABLED mode
 unsigned int state_counter = 0;
 
-// DHT Related Variables
-// ANALOG PINS:
-// A0, PF0: Water sensor
-// A1, PF1: Temperature and Humidity Sensor
-
-// Analog Pin sensor is connected to A1
-
-//Motor Related Variables
-// motor pin: PIN2, PE4
-
-
-
-
-// State Check Variables
-// Whenever the counter is:
-// 0, the system is at DISABLED state
-// 1, the system is OPERATING state (working)
-
 // Initialize LCD
-// RS: Pin 8, PH5
-// Enabler (E): 7, PH4
-// D4: 6, PH3
-// D5: 5, PH
-// D6: 4,
-// D7: 3,
 LiquidCrystal lcd(8,7,6,5,4,3);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,8 +120,6 @@ void adc_init();
 
 unsigned int adc_read(unsigned char adc_channel_num);
 
-RTC_DS1307 rtc;
-
 void setup()
 {
   adc_init();
@@ -160,28 +127,21 @@ void setup()
   Serial.begin(9600);
 
   //PORT B
-  // Turn all pins to output
-  *myDDR_B |= 0xFF;
-  // | 1111 0000 enables internal pull-up resistor
- //*myPORT_B |= 0xF0;
-
+  *myDDR_B |= 0xFF;         // Turn all pins to output
+  
   //PORT H
-  // Turn all pins to inputs
-  *myDDR_K &= 0x00;
-  // | 0100 0000 (0x40) enables internal pull-up resistor
-  *myPORT_K |= 0xFF;
+  *myDDR_K &= 0x00;         // Turn all pins to inputs
+  
+  //PORT K
+  *myPORT_K |= 0xFF;        // Enable internal pull-up resistor for all pins
 
   //PORT F 
-  //Turn all pins to output
-  *myDDR_F &= 0xFF;
-  //Enable internal pull-up resistor
-  *myPORT_F |= 0x80;
+  *myDDR_F &= 0xFF;         //Turn all pins to output
+  *myPORT_F |= 0x80;        //Enable internal pull-up resistor
 
   //PORT E: Motor PIN (PE4)
-  //Set bit to output
-  *myDDR_E &= 0x10;
-  //Enable internal pull-up resistor
-  *myPORT_E |= 0x10;
+  *myDDR_E &= 0x10;         //Set pin to output
+  *myPORT_E |= 0x10;        //Enable internal pull-up resistor
 
   // LCD size
   lcd.begin(16,2);
@@ -222,81 +182,7 @@ WORK BUCKET:
 
 void loop()
 {
-
- 
-  // Water Level Reading
-  unsigned int water_level = adc_read(0);
-
-  // Temperature & Humidity Sensor Reading
-  int chk = DHT11.read(DHT11PIN);
-  temperature = (float)DHT11.temperature;
-  humidity = (float)DHT11.humidity;
-
-  // Print Water Level, Air Temperature, and Humidity to the Serial Monitor
-  Serial.print("Water Level: ");
-  Serial.print(water_level);
-  Serial.print("      Temperature: ");
-  Serial.print(temperature);
-  Serial.print("C      Humidity: ");
-  Serial.print(humidity);
-  Serial.print("%");
-  
-
-  //function to display on LCD
-  //lcd_display(temperature, humidity);
-
-  lcd.clear();
-  // Abbreviated to display temperature on one line
-  lcd.print("Temp: ");
-  // Displays Temperature Value from DHT function
-  lcd.print(temperature);
-  // Prints degree symbol
-  lcd.print((char)223);
-  // prints "C" for Celsius
-  lcd.print("C");
-  // Adds new line
-  lcd.setCursor(0,1);
-  lcd.print("Humidity: ");
-  // Displays Humidity Value from DHT function
-  lcd.print(humidity);
-  lcd.print("%");
-
-/* Clock Sample CODE
-dt = clock.getDateTime();
-
- // For leading zero look to DS3231_dateformat example
-
- Serial.print("Raw data: ");
- Serial.print(dt.year);   Serial.print("-");
- Serial.print(dt.month);  Serial.print("-");
- Serial.print(dt.day);    Serial.print(" ");
- Serial.print(dt.hour);   Serial.print(":");
- Serial.print(dt.minute); Serial.print(":");
- Serial.print(dt.second); Serial.println("");
-
-Testing Area for clock
-lcd.clear();
-// Abbreviated to display temperature on one line
-lcd.print("Date: ");
-lcd.print("dt.month");
-lcd.print("/");
-lcd.print("dt.day");
-lcd.setCursor(0,1);
-lcd.print("Time: ");
-lcd.print("dt.hour");
-lcd.print(":");
-
-/* Dislplays
-
-  Date: [month]/[day]
-  Time: [hour]:[minute]
-
-* /
-
-*/
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
-  //Serial.print(state_counter);
-  //Serial.println(*myPIN_K & 0x40);
   if (!(*myPIN_K & 0x40))
   {
     // A loop that does nothing to make sure noise is not included
@@ -317,20 +203,51 @@ lcd.print(":");
     }
   }
 
-
-
-  //????? put out the button and counter out the state counter if statement
-  // If the system is DISABLED or OFF ******
+  // If the system should be DISABLED or OFF 
   if(state_counter == 0)
   {
-      // Function makes the system DISABLED mode
+      lcd.clear();
+      // Function puts the system into DISABLED mode
       disabled_mode();
   }
+  // Else the system should be ENABLED
   else
   {
-      //Serial.println("enabled");
-      // LCD display
-      lcd_display (temperature, humidity);
+    // Water Level Reading
+    unsigned int water_level = adc_read(0);
+    
+    // Temperature & Humidity Sensor Reading
+    int chk = DHT11.read(DHT11PIN);
+    temperature = (float)DHT11.temperature;
+    humidity = (float)DHT11.humidity;
+    
+    // LCD Display
+    lcd.clear();
+    // Abbreviated to display temperature on one line
+    lcd.print("Temp: ");
+    // Displays Temperature Value from DHT function
+    lcd.print(temperature);
+    // Prints degree symbol
+    lcd.print((char)223);
+    // prints "C" for Celsius
+    lcd.print("C");
+    // Adds new line
+    lcd.setCursor(0,1);
+    lcd.print("Humidity: ");
+    // Displays Humidity Value from DHT function
+    lcd.print(humidity);
+    lcd.print("%");
+
+
+    // Serial Monitor Display
+    // Print Water Level, Air Temperature, Humidity, and Machine State to the Serial Monitor
+    Serial.print("Water Level: ");
+    Serial.print(water_level);
+    Serial.print("      Temperature: ");
+    Serial.print(temperature);
+    Serial.print("C      Humidity: ");
+    Serial.print(humidity);
+    Serial.print("%");
 
       // Function is called to determine the current states
       // Uses water_level and temperature variables as parameters
