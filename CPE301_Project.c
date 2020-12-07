@@ -1,15 +1,13 @@
-#include <Adafruit_Sensor.h>
-
+// CPE301 Group Project. Group 17: Francis De Vera, Fate Jacobson, Josiah 
 
 // Libraries
+#include <Adafruit_Sensor.h>
 #include <Arduino.h>
 #include <Wire.h>
-//Elegoo
 #include <dht11.h>
 #include <LiquidCrystal.h>
-//#include <Adafruit_Sensor.h>
-#include <DS3231.h>
 #include <Servo.h>
+#include <RTClib.h>
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Terminology Used
 /*
@@ -42,28 +40,28 @@ volatile unsigned char* myPORT_B = (unsigned char*) 0x25;
 volatile unsigned char* myDDR_B  = (unsigned char*) 0x24;
 volatile unsigned char* myPIN_B  = (unsigned char*) 0x23;
 
-//PORT C DECLARATION: 
+//PORT C DECLARATION: Used as input for Temperature and Humdity sensor
 volatile unsigned char* myPORT_C = (unsigned char*) 0x28;
 volatile unsigned char* myDDR_C  = (unsigned char*) 0x27;
 volatile unsigned char* myPIN_C  = (unsigned char*) 0x26;
 
-//PORT H DECLARATION: Used as an input for push button
+//PORT H DECLARATION: Used as Input for push button
 volatile unsigned char* myPORT_H = (unsigned char*) 0x102;
 volatile unsigned char* myDDR_H  = (unsigned char*) 0x101;
 volatile unsigned char* myPIN_H  = (unsigned char*) 0x100;
 
-//PORT F DECLARATION: Analog
+//PORT F DECLARATION: Used as Input for Water Level Detection
 volatile unsigned char* myPORT_F = (unsigned char*) 0x31;
 volatile unsigned char* myDDR_F  = (unsigned char*) 0x30;
 volatile unsigned char* myPIN_F  = (unsigned char*) 0x2F;
 
-//PORT E DECLARATION: Fan Motor
+//PORT E DECLARATION: Used for Fan Motor
 volatile unsigned char* myPORT_E = (unsigned char*) 0x2E;
 volatile unsigned char* myDDR_E  = (unsigned char*) 0x2D;
 volatile unsigned char* myPIN_E  = (unsigned char*) 0x2C;
 
 
-//PORT K DECLARATION: Button and Transistor
+//PORT K DECLARATION: Used for Button and Transistor
 volatile unsigned char* myPORT_K = (unsigned char*) 0x108;
 volatile unsigned char* myDDR_K  = (unsigned char*) 0x107;
 volatile unsigned char* myPIN_K  = (unsigned char*) 0x106;
@@ -89,22 +87,25 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // TIFR1: Contains TOV (locate which bit)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 // Initializations OR Declarations
 
 // Global Variables
+
 // Water level hreshold
 #define w_threshold 150
 // Temperature threshold
 #define t_threshold 22
 
+// DHT Pin #
 #define DHT11PIN 36
 dht11 DHT11;
-/* Uncomment according to your sensortype. */
-//#define DHT_SENSOR_TYPE DHT_TYPE_11
-//#define DHT_SENSOR_TYPE DHT_TYPE_21
-//#define DHT_SENSOR_TYPE DHT_TYPE_22
 
+// Temperature and Humidity variables
+float temperature = 0;
+float humidity = 0;
+
+// Starts at DISABLED mode
+unsigned int state_counter = 0;
 
 // DHT Related Variables
 // ANALOG PINS:
@@ -115,22 +116,14 @@ dht11 DHT11;
 
 //Motor Related Variables
 // motor pin: PIN2, PE4
-//@@@@@@ unsigned int motor_speed = 50;
 
-// Initialize both temperature and humidity variables
-float temperature = 0;
-float humidity = 0;
 
-// Initialize Clock DS3231
- // clock.begin();
+
 
 // State Check Variables
 // Whenever the counter is:
 // 0, the system is at DISABLED state
 // 1, the system is OPERATING state (working)
-
-// Starts at DISABLED mode
-unsigned int state_counter = 0;
 
 // Initialize LCD
 // RS: Pin 8, PH5
@@ -142,6 +135,8 @@ unsigned int state_counter = 0;
 LiquidCrystal lcd(8,7,6,5,4,3);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//Function initializations
+
 void idle_state(int water_level, float temperature_C);
 
 void error_state(int water_level, float temperature_C);
@@ -152,13 +147,11 @@ void disabled_mode();
 
 float lcd_display (float temperature_C, float humidity);
 
-float f_to_c (float temperature);
-
 void adc_init();
 
 unsigned int adc_read(unsigned char adc_channel_num);
 
-
+RTC_DS1307 rtc;
 
 void setup()
 {
@@ -166,15 +159,11 @@ void setup()
 
   Serial.begin(9600);
 
-  // Set up the ddr, port registers for input and output ports
-
   //PORT B
   // Turn all pins to output
   *myDDR_B |= 0xFF;
   // | 1111 0000 enables internal pull-up resistor
  //*myPORT_B |= 0xF0;
-
-
 
   //PORT H
   // Turn all pins to inputs
@@ -182,26 +171,22 @@ void setup()
   // | 0100 0000 (0x40) enables internal pull-up resistor
   *myPORT_K |= 0xFF;
 
-  //PORT F *****
-  // & 1111 1111 (0xFF) makes all bits to output
+  //PORT F 
+  //Turn all pins to output
   *myDDR_F &= 0xFF;
-  // | 1000 0000 (0x80) enables internal pull-up resistor
+  //Enable internal pull-up resistor
   *myPORT_F |= 0x80;
 
   //PORT E: Motor PIN (PE4)
-  // & 0001 0000 (0xFF) makes all bits to output
+  //Set bit to output
   *myDDR_E &= 0x10;
-  // | 0001 0000 (0x80) enables internal pull-up resistor
+  //Enable internal pull-up resistor
   *myPORT_E |= 0x10;
 
   // LCD size
   lcd.begin(16,2);
-  // Set so that LCD display start on upper-left corner
+  // Set so that LCD display begins on upper-left corner
   lcd.setCursor(0,0);
-
-  // Clock
-  // Set sketch compiling time
-  //clock.setDateTime(__DATE__, __TIME__);
 }
 
 /*
@@ -237,26 +222,25 @@ WORK BUCKET:
 
 void loop()
 {
-  // Water Sensor: PF0 or A0
 
-  // water level = adc_reading, channel 0
- unsigned int water_level = adc_read(0);
- //Serial.println(water_level);
-  //OR
-
-
-  // prints water level
-  //Serial.println(water_level);
-  int chk = DHT11.read(DHT11PIN);
-  // Thermometer/Temperature & Humidity Sensor Reading
-  temperature = (float)DHT11.temperature;
-  Serial.println(temperature);
-
-  //change the temperature from Fahrenheit to Celcius
  
+  // Water Level Reading
+  unsigned int water_level = adc_read(0);
 
+  // Temperature & Humidity Sensor Reading
+  int chk = DHT11.read(DHT11PIN);
+  temperature = (float)DHT11.temperature;
   humidity = (float)DHT11.humidity;
-  //Serial.println(humidity);
+
+  // Print Water Level, Air Temperature, and Humidity to the Serial Monitor
+  Serial.print("Water Level: ");
+  Serial.print(water_level);
+  Serial.print("      Temperature: ");
+  Serial.print(temperature);
+  Serial.print("C      Humidity: ");
+  Serial.print(humidity);
+  Serial.print("%");
+  
 
   //function to display on LCD
   //lcd_display(temperature, humidity);
@@ -357,6 +341,7 @@ lcd.print(":");
       idle_state(water_level, temperature);
       error_state(water_level, temperature);
       running_state(water_level, temperature);
+      Serial.println("");
   }
 }
 
@@ -377,7 +362,7 @@ void idle_state (int water_level, float temperature)
 {
   // ===IDLE State===
   //@@@@@  && temperature_C < t_threshold
-  //Serial.println("IDLLLLLLEEEEE");
+  Serial.print("      Machine Status: Idle");
   if(water_level > w_threshold && temperature < t_threshold)
   {
     // Time Stamp
@@ -409,7 +394,7 @@ void error_state (int water_level, float temperature)
      *myPORT_B |=  0x20;               //to turn on RED LED
 
     // Error Message
-    Serial.println("Water level is too LOW");
+    Serial.print(" **Error (Water level too LOW)**");
 
     *myPORT_B |= 0x08;        //    0000 (10)00   PB3
     *myPORT_B &= 0xFD;        //     1111   11(0)1  PB2  //motor OFF
@@ -432,7 +417,7 @@ void running_state (int water_level, float temperature)
 
     // BLUE LED ON (0001 0000)
     *myPORT_B &=  0x00;               //to turn them all off
-    Serial.println("running");
+    Serial.print("      Machine Status: Running");
     *myPORT_B |=  0x40;               //to turn on BLUE LED
 
     // motor is on *****
@@ -451,7 +436,7 @@ void disabled_mode ()
   //not monitoring any temperature or water level
 
   //Yellow LED on
-  Serial.println("disabled");
+  Serial.println("      Machine Status: Disabled");
   *myPORT_B &=  0x00;               //to turn them all off
   *myPORT_B |=  0x10;               //to turn on Yellow LED
 
@@ -496,10 +481,6 @@ float lcd_display (float temperature_C, float humidity)
 // Convert Temperature from Fahrenheit to Celcius
 //******
 
-float f_to_c (float temperature)
-{
-    return (temperature - 32) * (5 / 9);
-}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ADC Functions
