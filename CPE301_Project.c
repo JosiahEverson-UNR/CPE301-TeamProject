@@ -1,4 +1,4 @@
-// CPE301 Group Project. Group 17: Francis De Vera, Fate Jacobson, Josiah 
+// CPE301 Group Project. Group 17: Al Francis De Vera, Fate Jacobson, Josiah Everson
 
 // Libraries
 #include <Adafruit_Sensor.h>
@@ -8,6 +8,7 @@
 #include <LiquidCrystal.h>
 #include <Servo.h>
 #include <RTClib.h>
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Terminology Used
 /*
@@ -80,11 +81,9 @@ volatile unsigned int  *myTCNT1  = (unsigned int*)  0x84;
 volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Initializations OR Declarations
+// Initializations, Declarations, and Definitions
 
-// Global Variables
-
-// Water level hreshold
+// Water level threshold
 #define w_threshold 150
 // Temperature threshold
 #define t_threshold 22
@@ -93,19 +92,18 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 #define DHT11PIN 36
 dht11 DHT11;
 
+// Global Variables
 // Temperature and Humidity variables
 float temperature = 0;
 float humidity = 0;
 
-// Start machine in DISABLED mode
+//Machine starts in DISABLED mode
 unsigned int state_counter = 0;
 
 // Initialize LCD
 LiquidCrystal lcd(8,7,6,5,4,3);
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Function initializations
-
 void idle_state(int water_level, float temperature_C);
 
 void error_state(int water_level, float temperature_C);
@@ -120,6 +118,8 @@ void adc_init();
 
 unsigned int adc_read(unsigned char adc_channel_num);
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//SETUP
 void setup()
 {
   adc_init();
@@ -149,37 +149,8 @@ void setup()
   lcd.setCursor(0,0);
 }
 
-/*
-WORK BUCKET:
-    //***** NEEDS CODE
-
-    // X means it's done
-
-1. [X] Whether to separate every state into different functions
-   so that lcd can be displayed to each IDLE STATE.
-
-   lcd_display (temperature, humidity);
-
-2. [] Integrate motor into code.
-
-3. [X] Temperature reading
-
-4. [X] Humidity reading
-
-5. [] Vent angle
-
-6. [X] Add Timer to record time whenever the system changes state.
-
-7. [] Physically build the circuit
-
-8. [] Project Report
-
-9. [X] Convert Temperature to Celcius
-      function: line 393
-      call: line 218
-
-*/
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//LOOP
 void loop()
 {
   // Checks whether the button is pushed; checks bit 6 (0100 0000)
@@ -188,27 +159,28 @@ void loop()
     // A loop that does nothing to make sure noise is not included
     // (which occurs at a micro second)
     for (volatile unsigned int i = 0; i < 1000; i++);
-
+    
     // Checks again if the button is pressed
     if (!(*myPIN_K & 0x40))
     {
-      // It's currently at 0 then becomes 1
+      // If currently at 0, then becomes 1
+      // If currently at 1, then becomes 2
       state_counter++;
-      // 1 % 2 = 1; which means that it's now in ENABLED Mode
+      
+      // 1 % 2 = 1; which means that it'll now in ENABLED Mode
+      // 2 % 2 = 0; which means that it'll now be in DISABLE Mode
       state_counter %= 2;
 
       // Makes sure that counter increments by one per pressed button
       while (!(*myPIN_H & 0x40));
-
     }
   }
 
-  // If the system should be DISABLED or OFF 
+  // If the system should currently be DISABLED 
   if(state_counter == 0)
   {
-      lcd.clear();
-      // Function puts the system into DISABLED mode
-      disabled_mode();
+    // Function puts the system into DISABLED mode
+    disabled_mode();
   }
   // Else the system should be ENABLED
   else
@@ -223,19 +195,13 @@ void loop()
     
     // LCD Display
     lcd.clear();
-    // Abbreviated to display temperature on one line
-    lcd.print("Temp: ");
-    // Displays Temperature Value from DHT function
-    lcd.print(temperature);
-    // Prints degree symbol
-    lcd.print((char)223);
-    // prints "C" for Celsius
-    lcd.print("C");
-    // Adds new line
-    lcd.setCursor(0,1);
+    lcd.print("Temp: ");        // Abbreviated to display temperature on one line
+    lcd.print(temperature);     // Displays Temperature Value from DHT function
+    lcd.print((char)223);       // Prints degree symbol
+    lcd.print("C");             // prints "C" for Celsius
+    lcd.setCursor(0,1);         // Adds new line
     lcd.print("Humidity: ");
-    // Displays Humidity Value from DHT function
-    lcd.print(humidity);
+    lcd.print(humidity);        // Displays Humidity Value from DHT function
     lcd.print("%");
 
 
@@ -249,101 +215,74 @@ void loop()
     Serial.print(humidity);
     Serial.print("%");
 
-      // Function is called to determine the current states
-      // Uses water_level and temperature variables as parameters
-
-      // Only one of these functions is going to get called
-
-      //@@@@@ , temperature_C)
-      idle_state(water_level, temperature);
-      error_state(water_level, temperature);
-      running_state(water_level, temperature);
-      Serial.println("");
+    // Functions are called to determine the current states
+    // They use the water level and air temperature to decide
+    idle_state(water_level, temperature);
+    error_state(water_level, temperature);
+    running_state(water_level, temperature);
+    
+    Serial.println("");        // New line helps organize the serial monitor
   }
 }
 
 //***********************\\FUNCTIONS//********************************
 
-// STATE FUNCTION
-// Filled with IF statements to output each states and their respective functions
-
-// LEDs Location:
-// PB7 - GREEN (IDLE) LED,
-// PB6 - YELLOW (DISABLED) LED,
-// PB5 - RED (ERROR) LED,
-// PB4 - BLUE (RUNNING) LED
-// PH6 - Push Button
-
-//@@@@@ , float temperature
 void idle_state (int water_level, float temperature)
 {
-  // ===IDLE State===
-  //@@@@@  && temperature_C < t_threshold
-  Serial.print("      Machine Status: Idle");
+  // If the water level is above the w_threshold and Temperature is under the t_threshold
   if(water_level > w_threshold && temperature < t_threshold)
   {
-    // Time Stamp
+    Serial.print("      Machine Status: Idle");
+    
+    // Where time stamp would go
+    
+    // LEDs
+    *myPORT_B &=  0x00;               // Turn all LEDs off
+    *myPORT_B |=  0x80;               // Turn on GREEN LED
 
-    // GREEN LED ON (1000 0000)
-    *myPORT_B &=  0x00;               //to turn them all off
-    *myPORT_B |=  0x80;               //to turn on GREEN LED
-
-    // motor is OFF *****
-    *myPORT_B |= 0x08;        //    0000 (10)00   PB3
-    *myPORT_B &= 0xFD;        //     1111   11(0)1  PB2  //motor OFF
-
+    // Turn Motor off
+    *myPORT_B |= 0x08;        
+    *myPORT_B &= 0xFD;        
   }
 }
 
-
-  // If statement if the water level is under the threshold (low)
-  //Temperature doesn't matter
-
-  //@@@@@ , float temperature
 void error_state (int water_level, float temperature)
 {
-  // ===ERROR State===
+  // If water level is below the threshold 
   if(water_level <= w_threshold)
   {
-
-    // RED LED ON (0010 0000)
-     *myPORT_B &=  0x00;               //to turn them all off
-     *myPORT_B |=  0x20;               //to turn on RED LED
+     // LEDs
+     *myPORT_B &=  0x00;               // Turn all LEDs off
+     *myPORT_B |=  0x20;               // Turn on RED LED
 
     // Error Message
     Serial.print(" **Error (Water level too LOW)**");
 
-    *myPORT_B |= 0x08;        //    0000 (10)00   PB3
-    *myPORT_B &= 0xFD;        //     1111   11(0)1  PB2  //motor OFF
+    // Turn Motor off
+    *myPORT_B |= 0x08;        
+    *myPORT_B &= 0xFD;       
   }
 }
 
-
-  // If the water level is above the w_threshold
-  // Temperature is above the t_threshold
-
-  //@@@@@ , float temperature
+// If the water level is above the w_threshold
+// Temperature is above the t_threshold
 void running_state (int water_level, float temperature)
 {
-  // ===RUNNING State===
-
-  //@@@@@  && temperature_C > t_threshold
+  // If the water level is above the w_threshold and Temperature is above the t_threshold
   if(water_level > w_threshold && temperature > t_threshold)
   {
-    // Time Stamp
-
-    // BLUE LED ON (0001 0000)
-    *myPORT_B &=  0x00;               //to turn them all off
     Serial.print("      Machine Status: Running");
-    *myPORT_B |=  0x40;               //to turn on BLUE LED
+    
+    // Where the Time Stamp would go
+    
+    // LEDs
+    *myPORT_B &=  0x00;               // Turn all LEDs off
+    *myPORT_B |=  0x40;               // Turn on BLUE LED
 
-    // motor is on *****
-    *myPORT_B |= 0x08;        //    0000 (10)00   PB3
-    *myPORT_B |= 0x02;        //    0000 00(1)0   PB2  //motor ON
+    // Turn Motor ON
+    *myPORT_B |= 0x08;        
+    *myPORT_B |= 0x02;        
   }
-
-  // If the water level is above the w_threshold
-  // Temperature is under the t_threshold
 }
 
 
@@ -352,13 +291,18 @@ void disabled_mode ()
   // ---DISABLED Mode---
   //not monitoring any temperature or water level
 
-  //Yellow LED on
   Serial.println("      Machine Status: Disabled");
-  *myPORT_B &=  0x00;               //to turn them all off
-  *myPORT_B |=  0x10;               //to turn on Yellow LED
 
-  *myPORT_B |= 0x08;        //    0000 (10)00   PB3
-  *myPORT_B &= 0xFD;        //     1111   11(0)1  PB2  //motor OFF
+  // Clear the LCD
+  lcd.clear();
+
+  // LEDs
+  *myPORT_B &=  0x00;               // Turn all LEDs off
+  *myPORT_B |=  0x10;               // Turn on YELLOW LED
+
+  // Turn Motor Off
+  *myPORT_B |= 0x08;        
+  *myPORT_B &= 0xFD;        
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,22 +326,7 @@ float lcd_display (float temperature_C, float humidity)
   // Displays Humidity Value from DHT function
   lcd.print(humidity);
   lcd.print("%");
-
-  /*
-
-  Displays
-
-  Temp: [temperature]oC
-  Humidity: [humidity]%
-
- */
 }
-
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Convert Temperature from Fahrenheit to Celcius
-//******
-
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ADC Functions
@@ -502,130 +431,3 @@ void adc_init()
   //return the result in the ADC data register
   return *my_ADC_DATA;
 }
-
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// Temperature with LCD Sample
-/*
-#include <LiquidCrystal.h>
-int tempPin = 0;
-//                BS  E  D4 D5  D6 D7
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
-void setup()
-{
-  lcd.begin(16, 2);
-}
-void loop()
-{
-  int tempReading = analogRead(tempPin);
-  // This is OK
-  double tempK = log(10000.0 * ((1024.0 / tempReading - 1)));
-  tempK = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * tempK * tempK )) * tempK );       //  Temp Kelvin
-  float tempC = tempK - 273.15;            // Convert Kelvin to Celcius
-  float tempF = (tempC * 9.0)/ 5.0 + 32.0; // Convert Celcius to Fahrenheit
-
-
-*/
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Temperature & Humidity Sample code
-
-/*
-#define dht_apin A0 // Analog Pin sensor is connected to
-
-dht DHT;
-
-
-void setup(){
-
-  Serial.begin(9600);
-  delay(500);//Delay to let system boot
-  Serial.println("DHT11 Humidity & temperature Sensor\n\n");
-  delay(1000);//Wait before accessing Sensor
-
-}//end "setup()"
-
-void loop(){
-  //Start of Program
-
-    DHT.read11(dht_apin);
-
-    Serial.print("Current humidity = ");
-    Serial.print(DHT.humidity);
-    Serial.print("%  ");
-    Serial.print("temperature = ");
-    Serial.print(DHT.temperature);
-    Serial.println("C  ");
-
-    delay(5000);//Wait 5 seconds before accessing sensor again.
-
-  //Fastest should be once every two seconds.
-
-}// end loop(
-*/
-
-
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/*
-// ===IDLE State===
-
-// GREEN LED ON (1000 0000)
-//*myPORT_B &=  0x00;               //to turn them all off
-//*myPORT_B |=  0x80;               //to turn on GREEN LED
-// Time stamps
-//*****
-
-// Monitor water level
-
-//~~~~~~~~~~~~~~~~setup timer register FUNCTION~~~~~~~~~~~~~~~~~~~
-void setup_timer_regs()
-{
-  // Setup the Timer Control Registers
-  // 0000 0000 & 0000 0000 = 0000 000{0}
-  *myTCCR1A &= 0x00;
-  *myTCCR1B &= 0x00;
-  *myTCCR1C &= 0x00;
-
-  // Reset the TOV Flag:       0000 0000 | 0000 0001 = 0000 000{1}
-  *myTIFR1 |= 0x01;
-  // Enable the TOV Interrupt: 0000 0000 | 0000 0001 = 0000 000{1}
-  *myTIMSK1 |= 0x01;
-}
-
-
-//~~~~~~~~~~~~~~~~~~TIMER OVERFLOW ISR~~~~~~~~~~~~~~~~~~~
-// Gets called once the Flag is Set
-ISR(TIMER1_OVF_vect)
-{
-   // Stop Timer:      0000 0000 & 1111 1110 = 0000 000{0}
-   *myTCCR1B &= 0xFE;
-   // Load the Count (TCNT Register)
-   *myTCNT1 |= 65536 - char_tick;
-   // Start the Timer: 0000 0000 | 0000 0001 = 0000 000{1}
-   *myTCCR1B |= 0x01;
-
-  // if it's not the STOP amount
-  if (char_tick != 65535)
-  {
-    //XOR to toggle PB6:
-    // 0000 0000 ^ 0100 0000 = 0{1}00 0000
-    // 0100 0000 ^ 0100 0000 = 0{0}00 0000
-    *port_B ^= 0x40;
-  }
-}
-
-*/
-
-/*
-Ignore these:
-      Serial.println("Increment by 1.");
-      //increments the counter by 1
-      counter++;
-      //1 % 16 = 1, 2 % 16 = 2, ... , 16 % 16 = 0
-      //to reset the counter to zero after the value becomes 16 (16 % 16 = 0)
-      counter %= 16;
-
-      //prints counter to the serial monitor
-      Serial.println(counter);
-*/
