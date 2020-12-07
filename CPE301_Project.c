@@ -96,7 +96,7 @@ volatile unsigned char *myTIFR1  = (unsigned char*) 0x36;
 // Water level hreshold
 #define w_threshold 150
 // Temperature threshold
-#define t_threshold 18
+#define t_threshold 22
 
 #define DHT11PIN 36
 dht11 DHT11;
@@ -259,7 +259,23 @@ void loop()
   //Serial.println(humidity);
 
   //function to display on LCD
-  //lcd_display(temperature_C, humidity);
+  //lcd_display(temperature, humidity);
+
+  lcd.clear();
+  // Abbreviated to display temperature on one line
+  lcd.print("Temp: ");
+  // Displays Temperature Value from DHT function
+  lcd.print(temperature);
+  // Prints degree symbol
+  lcd.print((char)223);
+  // prints "C" for Celsius
+  lcd.print("C");
+  // Adds new line
+  lcd.setCursor(0,1);
+  lcd.print("Humidity: ");
+  // Displays Humidity Value from DHT function
+  lcd.print(humidity);
+  lcd.print("%");
 
 /* Clock Sample CODE
 dt = clock.getDateTime();
